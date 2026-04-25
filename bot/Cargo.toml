@@ -1,0 +1,20 @@
+[package]
+name = "anderdzi-bot"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "anderdzi-bot"
+path = "src/main.rs"
+
+[dependencies]
+teloxide = { version = "0.13", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+solana-client = "2.1"
+solana-sdk = "2.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+dotenv = "0.15"

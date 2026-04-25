@@ -1,0 +1,20 @@
+[package]
+name = "anderdzi"
+version = "0.1.0"
+description = "On-chain crypto inheritance protocol on Solana"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "anderdzi"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.32.1"
+anchor-spl = "0.32.1"

@@ -1,0 +1,30 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Solana / Anchor
+.anchor/
+test-ledger/
+**/*.so
+**/*.keypair.json
+
+# Frontend
+app/node_modules/
+app/dist/
+app/.env
+
+# Bot
+bot/.env
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
