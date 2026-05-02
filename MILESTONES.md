@@ -6,13 +6,15 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 
 ---
 
-## Milestone 1 — Vault Core
+## Milestone 1 — Vault Core ✅
 *Goal: create and close a vault, deposit and withdraw SOL*
 
-- [ ] `create_vault` instruction — initializes vault account with owner, watcher, inactivity period
-- [ ] `close_vault` instruction — owner withdraws all SOL and closes the account
-- [ ] Unit tests for create and close
-- [ ] Vault account structure (`state.rs`) finalized
+- [x] `create_vault` instruction — initializes vault PDA with owner, watcher, inactivity period, grace period; optional initial deposit; enforces 6-month minimum inactivity period and 7-day minimum grace period
+- [x] `close_vault` instruction — owner withdraws all SOL (rent + deposits) and closes the account atomically
+- [x] `deposit` instruction — owner deposits additional SOL into an existing vault at any time
+- [x] `withdraw` instruction — owner withdraws a partial amount of SOL without closing the vault
+- [x] Vault account structure (`state.rs`) finalized — `MIN_INACTIVITY_PERIOD`, `MIN_GRACE_PERIOD`, `MAX_BENEFICIARIES` constants defined
+- [x] Unit tests — 14 tests covering happy paths and all error conditions for every instruction
 
 ---
 

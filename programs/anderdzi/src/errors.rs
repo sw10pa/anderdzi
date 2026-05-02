@@ -29,6 +29,15 @@ pub enum AnderdziError {
     #[msg("Inactivity period must be at least 6 months")]
     InactivityPeriodTooShort,
 
+    #[msg("Grace period must be at least 7 days")]
+    GracePeriodTooShort,
+
     #[msg("No beneficiaries set")]
     NoBeneficiaries,
+
+    #[msg("Amount must be greater than zero")]
+    ZeroAmount,
+
+    #[msg("Withdrawal amount exceeds total deposited")]
+    InsufficientFunds,
 }

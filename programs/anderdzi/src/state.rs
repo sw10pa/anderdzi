@@ -15,6 +15,8 @@ pub struct Vault {
 
 impl Vault {
     pub const MAX_BENEFICIARIES: usize = 10;
+    pub const MIN_INACTIVITY_PERIOD: i64 = 15_552_000; // 6 months in seconds
+    pub const MIN_GRACE_PERIOD: i64 = 604_800; // 7 days in seconds
 
     pub fn space(beneficiary_count: usize) -> usize {
         8           // discriminator

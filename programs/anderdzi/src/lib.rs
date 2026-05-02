@@ -3,7 +3,34 @@ use anchor_lang::prelude::*;
 declare_id!("6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x");
 
 pub mod errors;
+pub mod instructions;
 pub mod state;
 
+use instructions::*;
+
 #[program]
-pub mod anderdzi {}
+pub mod anderdzi {
+    use super::*;
+
+    pub fn create_vault(
+        ctx: Context<CreateVault>,
+        watcher: Pubkey,
+        inactivity_period: i64,
+        grace_period: i64,
+        deposit_amount: u64,
+    ) -> Result<()> {
+        instructions::create_vault::handler(ctx, watcher, inactivity_period, grace_period, deposit_amount)
+    }
+
+    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+        instructions::deposit::handler(ctx, amount)
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+        instructions::withdraw::handler(ctx, amount)
+    }
+
+    pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {
+        instructions::close_vault::handler(ctx)
+    }
+}
