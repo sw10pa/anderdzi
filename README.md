@@ -8,14 +8,14 @@
 
 Anderdzi is a self-custody inheritance protocol on Solana. Deposit SOL and SPL tokens into a secure vault, designate beneficiaries with percentage splits, and set an inactivity period. If you stop using crypto and miss your reminders, the vault automatically distributes your assets to your heirs.
 
-Your beneficiaries remain hidden on-chain until the moment of distribution. Your assets earn yield while they wait. As long as you're using Solana normally, Anderdzi stays completely silent.
+Your assets earn yield while they wait. As long as you're using Solana normally, Anderdzi stays completely silent.
 
 ---
 
 ## How It Works
 
 1. **Create a vault** — deposit SOL and SPL tokens, set your inactivity period
-2. **Add beneficiaries** — wallet addresses stored as hashed commitments, invisible until distribution
+2. **Add beneficiaries** — designate wallet addresses with percentage splits
 3. **Assets earn yield** — SOL is auto-staked via Marinade Finance
 4. **Anderdzi watches quietly** — monitors your on-chain activity, resets the timer automatically
 5. **If you go dark** — Telegram notifications with a direct check-in link

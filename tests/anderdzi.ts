@@ -287,6 +287,143 @@ describe("anderdzi", () => {
     });
   });
 
+  // ── set_beneficiaries ──────────────────────────────────────────────────────
+
+  describe("set_beneficiaries", () => {
+    it("sets a list of beneficiaries that sum to 100%", async () => {
+      const owner = provider.wallet.publicKey;
+      const vault = vaultAddress(owner);
+      const alice = Keypair.generate().publicKey;
+      const bob = Keypair.generate().publicKey;
+
+      await program.methods
+        .setBeneficiaries([
+          { wallet: alice, shareBps: 6000 },
+          { wallet: bob,   shareBps: 4000 },
+        ])
+        .accounts({ owner })
+        .rpc();
+
+      const account = await program.account.vault.fetch(vault);
+      assert.equal(account.beneficiaries.length, 2);
+      assert.ok(account.beneficiaries[0].wallet.equals(alice));
+      assert.equal(account.beneficiaries[0].shareBps, 6000);
+      assert.ok(account.beneficiaries[1].wallet.equals(bob));
+      assert.equal(account.beneficiaries[1].shareBps, 4000);
+    });
+
+    it("replaces the list when called again", async () => {
+      const owner = provider.wallet.publicKey;
+      const vault = vaultAddress(owner);
+      const carol = Keypair.generate().publicKey;
+
+      await program.methods
+        .setBeneficiaries([{ wallet: carol, shareBps: 10000 }])
+        .accounts({ owner })
+        .rpc();
+
+      const account = await program.account.vault.fetch(vault);
+      assert.equal(account.beneficiaries.length, 1);
+      assert.ok(account.beneficiaries[0].wallet.equals(carol));
+    });
+
+    it("rejects shares that do not sum to 10000 bps", async () => {
+      const owner = provider.wallet.publicKey;
+      const alice = Keypair.generate().publicKey;
+      const bob = Keypair.generate().publicKey;
+
+      try {
+        await program.methods
+          .setBeneficiaries([
+            { wallet: alice, shareBps: 6000 },
+            { wallet: bob,   shareBps: 3000 }, // total = 9000, not 10000
+          ])
+          .accounts({ owner })
+          .rpc();
+        assert.fail("expected error was not thrown");
+      } catch (err) {
+        assert.instanceOf(err, AnchorError);
+        assert.equal((err as AnchorError).error.errorCode.code, "InvalidShares");
+      }
+    });
+
+    it("rejects an empty beneficiary list", async () => {
+      const owner = provider.wallet.publicKey;
+
+      try {
+        await program.methods
+          .setBeneficiaries([])
+          .accounts({ owner })
+          .rpc();
+        assert.fail("expected error was not thrown");
+      } catch (err) {
+        assert.instanceOf(err, AnchorError);
+        assert.equal((err as AnchorError).error.errorCode.code, "NoBeneficiaries");
+      }
+    });
+
+    it("rejects more than 10 beneficiaries", async () => {
+      const owner = provider.wallet.publicKey;
+      // shareBps values don't matter here — TooManyBeneficiaries fires before the shares check
+      const tooMany = Array.from({ length: 11 }, () => ({
+        wallet: Keypair.generate().publicKey,
+        shareBps: 909,
+      }));
+
+      try {
+        await program.methods
+          .setBeneficiaries(tooMany)
+          .accounts({ owner })
+          .rpc();
+        assert.fail("expected error was not thrown");
+      } catch (err) {
+        assert.instanceOf(err, AnchorError);
+        assert.equal(
+          (err as AnchorError).error.errorCode.code,
+          "TooManyBeneficiaries"
+        );
+      }
+    });
+
+    it("rejects duplicate wallet addresses", async () => {
+      const owner = provider.wallet.publicKey;
+      const alice = Keypair.generate().publicKey;
+
+      try {
+        await program.methods
+          .setBeneficiaries([
+            { wallet: alice, shareBps: 5000 },
+            { wallet: alice, shareBps: 5000 }, // same wallet twice
+          ])
+          .accounts({ owner })
+          .rpc();
+        assert.fail("expected error was not thrown");
+      } catch (err) {
+        assert.instanceOf(err, AnchorError);
+        assert.equal(
+          (err as AnchorError).error.errorCode.code,
+          "DuplicateBeneficiary"
+        );
+      }
+    });
+
+    it("rejects a call from a non-owner", async () => {
+      const stranger = Keypair.generate();
+      await airdrop(stranger.publicKey, LAMPORTS_PER_SOL);
+
+      try {
+        await program.methods
+          .setBeneficiaries([{ wallet: stranger.publicKey, shareBps: 10000 }])
+          .accounts({ owner: stranger.publicKey })
+          .signers([stranger])
+          .rpc();
+        assert.fail("expected error was not thrown");
+      } catch (err) {
+        assert.ok(err);
+      }
+    });
+  });
+
   // ── close_vault ────────────────────────────────────────────────────────────
 
   describe("close_vault", () => {

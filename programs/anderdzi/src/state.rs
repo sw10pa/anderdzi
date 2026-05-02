@@ -34,8 +34,8 @@ impl Vault {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct Beneficiary {
-    pub commitment: [u8; 32], // SHA-256 hash of wallet address
-    pub share_bps: u16,       // out of 10000
+    pub wallet: Pubkey,  // heir's wallet address
+    pub share_bps: u16,  // out of 10000
 }
 
 impl Beneficiary {

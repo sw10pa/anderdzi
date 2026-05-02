@@ -7,6 +7,7 @@ pub mod instructions;
 pub mod state;
 
 use instructions::*;
+use state::Beneficiary;
 
 #[program]
 pub mod anderdzi {
@@ -28,6 +29,13 @@ pub mod anderdzi {
 
     pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         instructions::withdraw::handler(ctx, amount)
+    }
+
+    pub fn set_beneficiaries(
+        ctx: Context<SetBeneficiaries>,
+        beneficiaries: Vec<Beneficiary>,
+    ) -> Result<()> {
+        instructions::set_beneficiaries::handler(ctx, beneficiaries)
     }
 
     pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {

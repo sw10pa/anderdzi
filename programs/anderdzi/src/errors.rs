@@ -40,4 +40,7 @@ pub enum AnderdziError {
 
     #[msg("Withdrawal amount exceeds total deposited")]
     InsufficientFunds,
+
+    #[msg("Duplicate beneficiary wallet address")]
+    DuplicateBeneficiary,
 }

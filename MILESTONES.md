@@ -18,13 +18,15 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 
 ---
 
-## Milestone 2 — Beneficiaries
+## Milestone 2 — Beneficiaries ✅
 *Goal: owner can set, update, and remove beneficiaries with percentage splits*
 
-- [ ] `set_beneficiaries` instruction — stores hashed commitments + share basis points
-- [ ] Validation: shares must sum to 10000 bps (100%)
-- [ ] Validation: max 10 beneficiaries
-- [ ] Unit tests for beneficiary management
+- [x] `set_beneficiaries` instruction — stores beneficiary wallet addresses + share basis points; replaces entire list on each call
+- [x] Validation: shares must sum to 10000 bps (100%)
+- [x] Validation: max 10 beneficiaries
+- [x] Validation: list cannot be empty
+- [x] Unit tests for beneficiary management — 6 tests covering all cases
+- [x] Simplified to plain wallet addresses (no hashing) — distribution will be automatic in Milestone 5
 
 ---
 
@@ -51,8 +53,7 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 ## Milestone 5 — Distribution
 *Goal: assets distribute proportionally to beneficiaries after grace period*
 
-- [ ] `distribute` instruction — callable by anyone after grace period
-- [ ] Beneficiary reveals their wallet address to claim (commitment verified on-chain)
+- [ ] `distribute` instruction — callable by anyone after grace period; automatically pushes SOL to all beneficiary wallets
 - [ ] SOL split by share basis points
 - [ ] SPL token support
 - [ ] Unit tests for full distribution flow
