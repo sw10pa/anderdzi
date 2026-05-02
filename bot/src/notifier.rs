@@ -4,7 +4,7 @@ use tracing::info;
 
 /// Monitors vault states and sends Telegram notifications
 /// when inactivity thresholds are approaching or triggered.
-pub async fn run(bot: Bot) -> Result<()> {
+pub async fn run(_bot: Bot) -> Result<()> {
     info!("Notifier started");
 
     // TODO: load vault states from on-chain

@@ -5,17 +5,17 @@ anchor_version = "0.32.1"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-anderdzi = "11111111111111111111111111111111"
-
 [programs.devnet]
-anderdzi = "11111111111111111111111111111111"
+anderdzi = "6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x"
+
+[programs.localnet]
+anderdzi = "6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

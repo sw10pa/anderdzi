@@ -39,7 +39,6 @@ anderdzi/
 │       ├── watcher.rs     # On-chain activity monitoring
 │       └── notifier.rs    # Telegram notifications
 ├── app/                   # React frontend (TypeScript)
-├── tests/                 # Anchor integration tests
 ├── Anchor.toml
 └── Cargo.toml
 ```
@@ -72,7 +71,8 @@ anderdzi/
 ```bash
 git clone https://github.com/sw10pa/anderdzi
 cd anderdzi
-yarn install
+yarn install       # Anchor test dependencies
+cd app && npm install  # Frontend dependencies
 ```
 
 ### Build the program
@@ -93,6 +93,12 @@ anchor test
 cp bot/.env.example bot/.env
 # fill in TELEGRAM_BOT_TOKEN and SOLANA_RPC_URL
 cargo run --bin anderdzi-bot
+```
+
+### Run the frontend
+
+```bash
+cd app && npm run dev
 ```
 
 ---

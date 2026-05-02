@@ -16,5 +16,3 @@ React frontend for the Anderdzi inheritance protocol.
 npm install
 npm run dev
 ```
-
-> Frontend scaffold coming in Milestone 8.
