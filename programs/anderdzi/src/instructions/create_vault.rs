@@ -3,7 +3,10 @@ use anchor_lang::{
     system_program::{transfer, Transfer},
 };
 
-use crate::{errors::AnderdziError, state::{Beneficiary, Vault}};
+use crate::{
+    errors::AnderdziError,
+    state::{Beneficiary, Vault},
+};
 
 #[derive(Accounts)]
 pub struct CreateVault<'info> {
@@ -40,10 +43,7 @@ pub fn handler(
         watcher != ctx.accounts.owner.key(),
         AnderdziError::WatcherCannotBeOwner
     );
-    require!(
-        watcher != Pubkey::default(),
-        AnderdziError::InvalidWatcher
-    );
+    require!(watcher != Pubkey::default(), AnderdziError::InvalidWatcher);
 
     let vault = &mut ctx.accounts.vault;
 

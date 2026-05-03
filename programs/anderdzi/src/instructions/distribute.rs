@@ -1,6 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::{errors::AnderdziError, state::{Treasury, Vault}};
+use crate::{
+    errors::AnderdziError,
+    state::{Treasury, Vault},
+};
 
 #[derive(Accounts)]
 pub struct Distribute<'info> {
@@ -26,12 +29,18 @@ pub struct Distribute<'info> {
 pub fn handler(ctx: Context<Distribute>) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
 
-    let triggered_at = ctx.accounts.vault.triggered_at
+    let triggered_at = ctx
+        .accounts
+        .vault
+        .triggered_at
         .ok_or_else(|| error!(AnderdziError::NotTriggered))?;
     let grace_period = ctx.accounts.vault.grace_period;
-    let total        = ctx.accounts.vault.total_deposited;
+    let total = ctx.accounts.vault.total_deposited;
 
-    require!(now >= triggered_at + grace_period, AnderdziError::GracePeriodActive);
+    require!(
+        now >= triggered_at + grace_period,
+        AnderdziError::GracePeriodActive
+    );
 
     let beneficiaries = ctx.accounts.vault.beneficiaries.clone();
 
@@ -47,10 +56,10 @@ pub fn handler(ctx: Context<Distribute>) -> Result<()> {
     }
 
     // 1% fee, rounded down — dust is added to protocol amount below
-    let fee          = total / 100;
+    let fee = total / 100;
     let distributable = total - fee;
 
-    let vault_info    = ctx.accounts.vault.to_account_info();
+    let vault_info = ctx.accounts.vault.to_account_info();
     let treasury_info = ctx.accounts.treasury.to_account_info();
 
     let mut distributed: u64 = 0;

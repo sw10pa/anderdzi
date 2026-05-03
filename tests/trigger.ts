@@ -2,7 +2,13 @@ import * as anchor from "@coral-xyz/anchor";
 import { AnchorError } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
-import { program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
+import {
+  program,
+  vaultAddress,
+  airdrop,
+  SIX_MONTHS,
+  SEVEN_DAYS,
+} from "./helpers";
 
 // NOTE: trigger happy path and AlreadyTriggered require the inactivity period to
 // have elapsed. Testing those paths needs clock manipulation (e.g. LiteSVM) and
@@ -42,10 +48,7 @@ describe("trigger", () => {
     const vault = vaultAddress(owner.publicKey);
 
     try {
-      await program.methods
-        .trigger()
-        .accounts({ vault })
-        .rpc();
+      await program.methods.trigger().accounts({ vault }).rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);

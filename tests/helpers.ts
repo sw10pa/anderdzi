@@ -4,7 +4,7 @@ import { Anderdzi } from "../target/types/anderdzi";
 import { PublicKey } from "@solana/web3.js";
 
 export const SIX_MONTHS = 15_552_000;
-export const SEVEN_DAYS  = 604_800;
+export const SEVEN_DAYS = 604_800;
 
 export const provider = anchor.AnchorProvider.env();
 anchor.setProvider(provider);

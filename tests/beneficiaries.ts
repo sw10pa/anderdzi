@@ -2,7 +2,14 @@ import * as anchor from "@coral-xyz/anchor";
 import { AnchorError } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
-import { provider, program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
+import {
+  provider,
+  program,
+  vaultAddress,
+  airdrop,
+  SIX_MONTHS,
+  SEVEN_DAYS,
+} from "./helpers";
 
 describe("update_beneficiaries", () => {
   let owner: Keypair;
@@ -36,12 +43,12 @@ describe("update_beneficiaries", () => {
   it("updates the beneficiary list", async () => {
     const vault = vaultAddress(owner.publicKey);
     const alice = Keypair.generate().publicKey;
-    const bob   = Keypair.generate().publicKey;
+    const bob = Keypair.generate().publicKey;
 
     await program.methods
       .updateBeneficiaries([
         { wallet: alice, shareBps: 6000 },
-        { wallet: bob,   shareBps: 4000 },
+        { wallet: bob, shareBps: 4000 },
       ])
       .accounts({ owner: owner.publicKey })
       .signers([owner])
@@ -64,20 +71,22 @@ describe("update_beneficiaries", () => {
       .signers([owner])
       .rpc();
 
-    const account = await program.account.vault.fetch(vaultAddress(owner.publicKey));
+    const account = await program.account.vault.fetch(
+      vaultAddress(owner.publicKey)
+    );
     assert.equal(account.beneficiaries.length, 1);
     assert.ok(account.beneficiaries[0].wallet.equals(carol));
   });
 
   it("rejects shares that do not sum to 10000 bps", async () => {
     const alice = Keypair.generate().publicKey;
-    const bob   = Keypair.generate().publicKey;
+    const bob = Keypair.generate().publicKey;
 
     try {
       await program.methods
         .updateBeneficiaries([
           { wallet: alice, shareBps: 6000 },
-          { wallet: bob,   shareBps: 3000 },
+          { wallet: bob, shareBps: 3000 },
         ])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
@@ -99,7 +108,10 @@ describe("update_beneficiaries", () => {
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "NoBeneficiaries");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "NoBeneficiaries"
+      );
     }
   });
 
@@ -118,7 +130,10 @@ describe("update_beneficiaries", () => {
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "TooManyBeneficiaries");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "TooManyBeneficiaries"
+      );
     }
   });
 
@@ -137,7 +152,10 @@ describe("update_beneficiaries", () => {
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "DuplicateBeneficiary");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "DuplicateBeneficiary"
+      );
     }
   });
 

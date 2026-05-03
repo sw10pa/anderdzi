@@ -3,7 +3,12 @@
 import pkg from "@coral-xyz/anchor";
 import type { Idl, Program } from "@coral-xyz/anchor";
 import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
-import { ComputeBudgetProgram, Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { assert } from "chai";
@@ -22,15 +27,15 @@ const IDL = JSON.parse(
 const SIX_MONTHS = 15_552_000;
 const SEVEN_DAYS = 604_800;
 
-const client   = fromWorkspace(".");
+const client = fromWorkspace(".");
 const provider = new LiteSVMProvider(client);
-const program  = new pkg.Program(IDL, provider) as Program<Anderdzi>;
+const program = new pkg.Program(IDL, provider) as Program<Anderdzi>;
 
 // LiteSVM's blockhash never changes, so identical transactions are rejected as
 // AlreadyProcessed. Prepend a unique compute-unit limit to differentiate each call.
 let seq = 0;
 function uniquify() {
-  return [ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 + (++seq) })];
+  return [ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 + ++seq })];
 }
 
 function vaultPDA(owner: PublicKey): PublicKey {
@@ -50,14 +55,14 @@ function treasuryPDA(): PublicKey {
 // ── e2e: create → deposit → trigger → distribute ──────────────────────────────
 
 describe("e2e: create → deposit → trigger → distribute", () => {
-  const owner   = Keypair.generate();
+  const owner = Keypair.generate();
   const watcher = Keypair.generate();
-  const heir1   = Keypair.generate();
-  const heir2   = Keypair.generate();
+  const heir1 = Keypair.generate();
+  const heir2 = Keypair.generate();
 
   const DEPOSIT = 2 * LAMPORTS_PER_SOL;
 
-  const vault    = vaultPDA(owner.publicKey);
+  const vault = vaultPDA(owner.publicKey);
   const treasury = treasuryPDA();
 
   before(() => {
@@ -103,7 +108,11 @@ describe("e2e: create → deposit → trigger → distribute", () => {
 
   it("trigger rejects before the inactivity period elapses", async () => {
     try {
-      await program.methods.trigger().accounts({ vault }).preInstructions(uniquify()).rpc();
+      await program.methods
+        .trigger()
+        .accounts({ vault })
+        .preInstructions(uniquify())
+        .rpc();
       assert.fail("expected NotInactive");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
@@ -116,7 +125,11 @@ describe("e2e: create → deposit → trigger → distribute", () => {
     clock.unixTimestamp += BigInt(SIX_MONTHS);
     client.setClock(clock);
 
-    await program.methods.trigger().accounts({ vault }).preInstructions(uniquify()).rpc();
+    await program.methods
+      .trigger()
+      .accounts({ vault })
+      .preInstructions(uniquify())
+      .rpc();
 
     const acc = await program.account.vault.fetch(vault);
     assert.isNotNull(acc.triggeredAt);
@@ -124,7 +137,11 @@ describe("e2e: create → deposit → trigger → distribute", () => {
 
   it("rejects a second trigger while the vault is already triggered", async () => {
     try {
-      await program.methods.trigger().accounts({ vault }).preInstructions(uniquify()).rpc();
+      await program.methods
+        .trigger()
+        .accounts({ vault })
+        .preInstructions(uniquify())
+        .rpc();
       assert.fail("expected AlreadyTriggered");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
@@ -173,15 +190,27 @@ describe("e2e: create → deposit → trigger → distribute", () => {
     const heir1After = client.getBalance(heir1.publicKey) ?? BigInt(0);
     const heir2After = client.getBalance(heir2.publicKey) ?? BigInt(0);
 
-    const deposited     = BigInt(DEPOSIT);
-    const fee           = deposited / BigInt(100);
+    const deposited = BigInt(DEPOSIT);
+    const fee = deposited / BigInt(100);
     const distributable = deposited - fee;
     const expectedHeir1 = (distributable * BigInt(6000)) / BigInt(10000);
     const expectedHeir2 = (distributable * BigInt(4000)) / BigInt(10000);
 
-    assert.equal(heir1After - heir1Before, expectedHeir1, "heir1 received wrong amount");
-    assert.equal(heir2After - heir2Before, expectedHeir2, "heir2 received wrong amount");
-    assert.equal(client.getBalance(vault) ?? BigInt(0), BigInt(0), "vault should be closed");
+    assert.equal(
+      heir1After - heir1Before,
+      expectedHeir1,
+      "heir1 received wrong amount"
+    );
+    assert.equal(
+      heir2After - heir2Before,
+      expectedHeir2,
+      "heir2 received wrong amount"
+    );
+    assert.equal(
+      client.getBalance(vault) ?? BigInt(0),
+      BigInt(0),
+      "vault should be closed"
+    );
   });
 
   // ── withdraw_fees ──────────────────────────────────────────────────────────

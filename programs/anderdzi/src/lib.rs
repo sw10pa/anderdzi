@@ -30,7 +30,14 @@ pub mod anderdzi {
         deposit_amount: u64,
         beneficiaries: Vec<Beneficiary>,
     ) -> Result<()> {
-        instructions::create_vault::handler(ctx, watcher, inactivity_period, grace_period, deposit_amount, beneficiaries)
+        instructions::create_vault::handler(
+            ctx,
+            watcher,
+            inactivity_period,
+            grace_period,
+            deposit_amount,
+            beneficiaries,
+        )
     }
 
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {

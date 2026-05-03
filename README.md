@@ -1,6 +1,6 @@
 # Anderdzi — On-Chain Crypto Inheritance Protocol
 
-> *Anderdzi (ანდერძი) is the Georgian word for testament — a final declaration of your wishes, meant to outlast you. We built this because self-custody shouldn't end when you do.*
+> _Anderdzi (ანდერძი) is the Georgian word for testament — a final declaration of your wishes, meant to outlast you. We built this because self-custody shouldn't end when you do._
 
 ---
 
@@ -47,13 +47,13 @@ anderdzi/
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Smart contract | Anchor 0.32, Rust |
-| Activity watcher + Telegram bot | Rust, teloxide, solana-client |
-| Frontend | React, TypeScript, Vite, Tailwind CSS |
-| Wallet connection | Solana Wallet Adapter |
-| Yield | Marinade Finance |
+| Layer                           | Technology                            |
+| ------------------------------- | ------------------------------------- |
+| Smart contract                  | Anchor 0.32, Rust                     |
+| Activity watcher + Telegram bot | Rust, teloxide, solana-client         |
+| Frontend                        | React, TypeScript, Vite, Tailwind CSS |
+| Wallet connection               | Solana Wallet Adapter                 |
+| Yield                           | Marinade Finance                      |
 
 ---
 

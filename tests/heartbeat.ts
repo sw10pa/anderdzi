@@ -2,18 +2,30 @@ import * as anchor from "@coral-xyz/anchor";
 import { AnchorError } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
-import { program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
+import {
+  program,
+  vaultAddress,
+  airdrop,
+  SIX_MONTHS,
+  SEVEN_DAYS,
+} from "./helpers";
 
 describe("ping", () => {
   let owner: Keypair;
   let watcher: Keypair;
 
   before(async () => {
-    owner   = Keypair.generate();
+    owner = Keypair.generate();
     watcher = Keypair.generate();
     await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
     await program.methods
-      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }])
+      .createVault(
+        watcher.publicKey,
+        new anchor.BN(SIX_MONTHS),
+        new anchor.BN(SEVEN_DAYS),
+        new anchor.BN(0),
+        [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }]
+      )
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();
@@ -30,12 +42,19 @@ describe("ping", () => {
   it("owner resets the inactivity timer", async () => {
     const vault = vaultAddress(owner.publicKey);
     const before = await program.account.vault.fetch(vault);
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 2000));
 
-    await program.methods.ping().accounts({ owner: owner.publicKey }).signers([owner]).rpc();
+    await program.methods
+      .ping()
+      .accounts({ owner: owner.publicKey })
+      .signers([owner])
+      .rpc();
 
     const after = await program.account.vault.fetch(vault);
-    assert.isAbove(after.lastHeartbeat.toNumber(), before.lastHeartbeat.toNumber());
+    assert.isAbove(
+      after.lastHeartbeat.toNumber(),
+      before.lastHeartbeat.toNumber()
+    );
     assert.isNull(after.triggeredAt);
   });
 
@@ -61,11 +80,17 @@ describe("witness_activity", () => {
   let watcher: Keypair;
 
   before(async () => {
-    owner   = Keypair.generate();
+    owner = Keypair.generate();
     watcher = Keypair.generate();
     await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
     await program.methods
-      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }])
+      .createVault(
+        watcher.publicKey,
+        new anchor.BN(SIX_MONTHS),
+        new anchor.BN(SEVEN_DAYS),
+        new anchor.BN(0),
+        [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }]
+      )
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();
@@ -82,7 +107,7 @@ describe("witness_activity", () => {
   it("watcher resets the inactivity timer", async () => {
     const vault = vaultAddress(owner.publicKey);
     const before = await program.account.vault.fetch(vault);
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 2000));
 
     await program.methods
       .witnessActivity()
@@ -91,7 +116,10 @@ describe("witness_activity", () => {
       .rpc();
 
     const after = await program.account.vault.fetch(vault);
-    assert.isAbove(after.lastHeartbeat.toNumber(), before.lastHeartbeat.toNumber());
+    assert.isAbove(
+      after.lastHeartbeat.toNumber(),
+      before.lastHeartbeat.toNumber()
+    );
     assert.isNull(after.triggeredAt);
   });
 
@@ -109,7 +137,10 @@ describe("witness_activity", () => {
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "UnauthorizedWatcher");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "UnauthorizedWatcher"
+      );
     }
   });
 
@@ -125,7 +156,10 @@ describe("witness_activity", () => {
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "UnauthorizedWatcher");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "UnauthorizedWatcher"
+      );
     }
   });
 });

@@ -2,8 +2,8 @@ use anyhow::Result;
 use teloxide::prelude::*;
 use tracing::info;
 
-mod watcher;
 mod notifier;
+mod watcher;
 
 #[tokio::main]
 async fn main() -> Result<()> {

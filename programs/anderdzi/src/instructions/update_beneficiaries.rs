@@ -1,6 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::{errors::AnderdziError, state::{Beneficiary, Vault}};
+use crate::{
+    errors::AnderdziError,
+    state::{Beneficiary, Vault},
+};
 
 #[derive(Accounts)]
 pub struct UpdateBeneficiaries<'info> {

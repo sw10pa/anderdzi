@@ -1,3 +1,3 @@
 export default function App() {
-  return <div>Anderdzi</div>
+  return <div>Anderdzi</div>;
 }

@@ -2,10 +2,17 @@ import * as anchor from "@coral-xyz/anchor";
 import { AnchorError } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { provider, program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
+import {
+  provider,
+  program,
+  vaultAddress,
+  airdrop,
+  SIX_MONTHS,
+  SEVEN_DAYS,
+} from "./helpers";
 
 const watcher = Keypair.generate();
-const heir    = Keypair.generate();
+const heir = Keypair.generate();
 
 // ── create_vault ─────────────────────────────────────────────────────────────
 
@@ -56,7 +63,9 @@ describe("create_vault", () => {
       .signers([owner])
       .rpc();
 
-    const account = await program.account.vault.fetch(vaultAddress(owner.publicKey));
+    const account = await program.account.vault.fetch(
+      vaultAddress(owner.publicKey)
+    );
     assert.equal(account.totalDeposited.toNumber(), 0);
   });
 
@@ -66,14 +75,23 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS - 1), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
+        .createVault(
+          watcher.publicKey,
+          new anchor.BN(SIX_MONTHS - 1),
+          new anchor.BN(SEVEN_DAYS),
+          new anchor.BN(0),
+          [{ wallet: heir.publicKey, shareBps: 10000 }]
+        )
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "InactivityPeriodTooShort");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "InactivityPeriodTooShort"
+      );
     }
   });
 
@@ -83,14 +101,23 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS - 1), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
+        .createVault(
+          watcher.publicKey,
+          new anchor.BN(SIX_MONTHS),
+          new anchor.BN(SEVEN_DAYS - 1),
+          new anchor.BN(0),
+          [{ wallet: heir.publicKey, shareBps: 10000 }]
+        )
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "GracePeriodTooShort");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "GracePeriodTooShort"
+      );
     }
   });
 
@@ -100,14 +127,23 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(owner.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
+        .createVault(
+          owner.publicKey,
+          new anchor.BN(SIX_MONTHS),
+          new anchor.BN(SEVEN_DAYS),
+          new anchor.BN(0),
+          [{ wallet: heir.publicKey, shareBps: 10000 }]
+        )
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "WatcherCannotBeOwner");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "WatcherCannotBeOwner"
+      );
     }
   });
 
@@ -117,7 +153,13 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(PublicKey.default, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
+        .createVault(
+          PublicKey.default,
+          new anchor.BN(SIX_MONTHS),
+          new anchor.BN(SEVEN_DAYS),
+          new anchor.BN(0),
+          [{ wallet: heir.publicKey, shareBps: 10000 }]
+        )
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
@@ -133,7 +175,13 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
+        .createVault(
+          watcher.publicKey,
+          new anchor.BN(SIX_MONTHS),
+          new anchor.BN(SEVEN_DAYS),
+          new anchor.BN(0),
+          [{ wallet: heir.publicKey, shareBps: 10000 }]
+        )
         .accounts({ owner })
         .rpc();
       assert.fail("expected error was not thrown");
@@ -160,7 +208,10 @@ describe("deposit", () => {
       after.totalDeposited.toNumber(),
       before.totalDeposited.toNumber() + amount.toNumber()
     );
-    assert.isAtLeast(await provider.connection.getBalance(vault), after.totalDeposited.toNumber());
+    assert.isAtLeast(
+      await provider.connection.getBalance(vault),
+      after.totalDeposited.toNumber()
+    );
   });
 
   it("rejects a zero-amount deposit", async () => {
@@ -219,7 +270,10 @@ describe("withdraw", () => {
     const owner = provider.wallet.publicKey;
 
     try {
-      await program.methods.withdraw(new anchor.BN(0)).accounts({ owner }).rpc();
+      await program.methods
+        .withdraw(new anchor.BN(0))
+        .accounts({ owner })
+        .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
@@ -237,7 +291,10 @@ describe("withdraw", () => {
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "InsufficientFunds");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "InsufficientFunds"
+      );
     }
   });
 
@@ -265,12 +322,18 @@ describe("update_watcher", () => {
     const owner = provider.wallet.publicKey;
     const newWatcher = Keypair.generate();
 
-    await program.methods.updateWatcher(newWatcher.publicKey).accounts({ owner }).rpc();
+    await program.methods
+      .updateWatcher(newWatcher.publicKey)
+      .accounts({ owner })
+      .rpc();
 
     const account = await program.account.vault.fetch(vaultAddress(owner));
     assert.ok(account.watcher.equals(newWatcher.publicKey));
 
-    await program.methods.updateWatcher(watcher.publicKey).accounts({ owner }).rpc();
+    await program.methods
+      .updateWatcher(watcher.publicKey)
+      .accounts({ owner })
+      .rpc();
   });
 
   it("rejects setting watcher to the owner pubkey", async () => {
@@ -281,7 +344,10 @@ describe("update_watcher", () => {
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "WatcherCannotBeOwner");
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "WatcherCannotBeOwner"
+      );
     }
   });
 
@@ -289,7 +355,10 @@ describe("update_watcher", () => {
     const owner = provider.wallet.publicKey;
 
     try {
-      await program.methods.updateWatcher(PublicKey.default).accounts({ owner }).rpc();
+      await program.methods
+        .updateWatcher(PublicKey.default)
+        .accounts({ owner })
+        .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
       assert.instanceOf(err, AnchorError);
@@ -334,7 +403,13 @@ describe("close_vault", () => {
     await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
 
     await program.methods
-      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
+      .createVault(
+        watcher.publicKey,
+        new anchor.BN(SIX_MONTHS),
+        new anchor.BN(SEVEN_DAYS),
+        new anchor.BN(0),
+        [{ wallet: heir.publicKey, shareBps: 10000 }]
+      )
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();

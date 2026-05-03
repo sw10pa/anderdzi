@@ -22,7 +22,10 @@ pub fn handler(ctx: Context<Trigger>) -> Result<()> {
         now >= vault.last_heartbeat + vault.inactivity_period,
         AnderdziError::NotInactive
     );
-    require!(vault.triggered_at.is_none(), AnderdziError::AlreadyTriggered);
+    require!(
+        vault.triggered_at.is_none(),
+        AnderdziError::AlreadyTriggered
+    );
 
     vault.triggered_at = Some(now);
     Ok(())

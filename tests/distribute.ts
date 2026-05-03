@@ -2,7 +2,15 @@ import * as anchor from "@coral-xyz/anchor";
 import { AnchorError } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
-import { provider, program, vaultAddress, treasuryAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
+import {
+  provider,
+  program,
+  vaultAddress,
+  treasuryAddress,
+  airdrop,
+  SIX_MONTHS,
+  SEVEN_DAYS,
+} from "./helpers";
 
 // NOTE: distribute happy path, GracePeriodActive, and BeneficiaryAccountMismatch
 // all require a triggered vault. Testing those paths needs clock manipulation
@@ -15,10 +23,7 @@ describe("initialize_treasury", () => {
     const authority = provider.wallet.publicKey;
     const treasury = treasuryAddress();
 
-    await program.methods
-      .initializeTreasury()
-      .accounts({ authority })
-      .rpc();
+    await program.methods.initializeTreasury().accounts({ authority }).rpc();
 
     const account = await program.account.treasury.fetch(treasury);
     assert.ok(account.authority.equals(authority));
@@ -79,7 +84,9 @@ describe("distribute", () => {
       await program.methods
         .distribute()
         .accounts({ vault, treasury })
-        .remainingAccounts([{ pubkey: heir.publicKey, isSigner: false, isWritable: true }])
+        .remainingAccounts([
+          { pubkey: heir.publicKey, isSigner: false, isWritable: true },
+        ])
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {

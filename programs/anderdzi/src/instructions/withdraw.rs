@@ -23,8 +23,16 @@ pub fn handler(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
     );
 
     // PDAs cannot sign for system_program::transfer; direct lamport manipulation is correct here.
-    **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= amount;
-    **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += amount;
+    **ctx
+        .accounts
+        .vault
+        .to_account_info()
+        .try_borrow_mut_lamports()? -= amount;
+    **ctx
+        .accounts
+        .owner
+        .to_account_info()
+        .try_borrow_mut_lamports()? += amount;
 
     let vault = &mut ctx.accounts.vault;
     vault.total_deposited -= amount;

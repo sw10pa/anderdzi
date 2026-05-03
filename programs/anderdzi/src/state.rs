@@ -5,10 +5,10 @@ use crate::errors::AnderdziError;
 #[account]
 pub struct Vault {
     pub owner: Pubkey,
-    pub watcher: Pubkey,          // trusted bot oracle pubkey
-    pub inactivity_period: i64,   // seconds before vault triggers
-    pub last_heartbeat: i64,      // unix timestamp of last activity
-    pub grace_period: i64,        // seconds after trigger before distribution
+    pub watcher: Pubkey,        // trusted bot oracle pubkey
+    pub inactivity_period: i64, // seconds before vault triggers
+    pub last_heartbeat: i64,    // unix timestamp of last activity
+    pub grace_period: i64,      // seconds after trigger before distribution
     pub triggered_at: Option<i64>,
     pub beneficiaries: Vec<Beneficiary>,
     pub total_deposited: u64,
@@ -59,7 +59,7 @@ impl Vault {
         + 9         // triggered_at (Option<i64>)
         + 4 + (beneficiary_count * Beneficiary::SIZE) // beneficiaries vec
         + 8         // total_deposited
-        + 1         // bump
+        + 1 // bump
     }
 }
 
@@ -73,14 +73,14 @@ impl Treasury {
     pub fn space() -> usize {
         8   // discriminator
         + 32 // authority
-        + 1  // bump
+        + 1 // bump
     }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct Beneficiary {
-    pub wallet: Pubkey,  // heir's wallet address
-    pub share_bps: u16,  // out of 10000
+    pub wallet: Pubkey, // heir's wallet address
+    pub share_bps: u16, // out of 10000
 }
 
 impl Beneficiary {
