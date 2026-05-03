@@ -43,4 +43,10 @@ pub enum AnderdziError {
 
     #[msg("Duplicate beneficiary wallet address")]
     DuplicateBeneficiary,
+
+    #[msg("Watcher cannot be the same as the vault owner")]
+    WatcherCannotBeOwner,
+
+    #[msg("Invalid watcher — cannot be the zero pubkey")]
+    InvalidWatcher,
 }

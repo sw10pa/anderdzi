@@ -20,6 +20,7 @@ impl Vault {
 
     pub fn touch(&mut self) -> Result<()> {
         self.last_heartbeat = Clock::get()?.unix_timestamp;
+        self.triggered_at = None;
         Ok(())
     }
 

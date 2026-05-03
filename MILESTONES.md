@@ -30,13 +30,16 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 
 ---
 
-## Milestone 3 — Heartbeat & Activity
+## Milestone 3 — Heartbeat & Activity ✅
 *Goal: inactivity timer works via both manual ping and bot oracle*
 
-- [ ] `ping` instruction — owner resets timer manually
-- [ ] `witness_activity` instruction — trusted watcher resets timer on behalf of owner
-- [ ] Watcher keypair stored in vault, only watcher can call `witness_activity`
-- [ ] Unit tests for both heartbeat paths
+- [x] `ping` instruction — owner resets timer manually; also cancels any active trigger
+- [x] `witness_activity` instruction — trusted watcher resets timer on behalf of owner; also cancels any active trigger
+- [x] Watcher keypair stored in vault, only watcher can call `witness_activity`
+- [x] `update_watcher` instruction — owner can rotate the watcher keypair at any time
+- [x] Watcher cannot be set to the owner pubkey or the zero pubkey (enforced on create and update)
+- [x] `touch()` helper on `Vault` — single definition for heartbeat reset + trigger cancel
+- [x] Unit tests — 10 tests covering all heartbeat paths, watcher validation, and key rotation
 
 ---
 

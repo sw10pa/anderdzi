@@ -31,6 +31,18 @@ pub mod anderdzi {
         instructions::withdraw::handler(ctx, amount)
     }
 
+    pub fn ping(ctx: Context<Ping>) -> Result<()> {
+        instructions::ping::handler(ctx)
+    }
+
+    pub fn witness_activity(ctx: Context<WitnessActivity>) -> Result<()> {
+        instructions::witness_activity::handler(ctx)
+    }
+
+    pub fn update_watcher(ctx: Context<UpdateWatcher>, new_watcher: Pubkey) -> Result<()> {
+        instructions::update_watcher::handler(ctx, new_watcher)
+    }
+
     pub fn set_beneficiaries(
         ctx: Context<SetBeneficiaries>,
         beneficiaries: Vec<Beneficiary>,

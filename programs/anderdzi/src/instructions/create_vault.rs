@@ -35,6 +35,14 @@ pub fn handler(
         grace_period >= Vault::MIN_GRACE_PERIOD,
         AnderdziError::GracePeriodTooShort
     );
+    require!(
+        watcher != ctx.accounts.owner.key(),
+        AnderdziError::WatcherCannotBeOwner
+    );
+    require!(
+        watcher != Pubkey::default(),
+        AnderdziError::InvalidWatcher
+    );
 
     let vault = &mut ctx.accounts.vault;
 
