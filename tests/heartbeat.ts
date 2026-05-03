@@ -5,7 +5,7 @@ import { assert } from "chai";
 import { program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
 
 // NOTE: triggered_at clearing via touch() is not testable here — no trigger
-// instruction yet. Tests for that behaviour will be added in 04_trigger.ts.
+// instruction yet. Tests for that behaviour will be added in trigger.ts.
 
 describe("ping", () => {
   let owner: Keypair;

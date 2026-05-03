@@ -1,3 +1,8 @@
+// Anchor 0.32.x macros check for `anchor-debug`, `custom-heap`, and `custom-panic`
+// cfg flags that are internal to those crates. Newer rustc versions surface these
+// as unexpected_cfgs warnings in the consuming crate — suppress them here.
+#![allow(unexpected_cfgs)]
+
 use anchor_lang::prelude::*;
 
 declare_id!("6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x");

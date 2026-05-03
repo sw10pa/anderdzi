@@ -265,7 +265,6 @@ describe("update_watcher", () => {
     const account = await program.account.vault.fetch(vaultAddress(owner));
     assert.ok(account.watcher.equals(newWatcher.publicKey));
 
-    // restore original watcher so witness_activity tests in 03 still work on their own vault
     await program.methods.updateWatcher(watcher.publicKey).accounts({ owner }).rpc();
   });
 
