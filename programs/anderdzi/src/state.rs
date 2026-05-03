@@ -63,6 +63,20 @@ impl Vault {
     }
 }
 
+#[account]
+pub struct Treasury {
+    pub authority: Pubkey,
+    pub bump: u8,
+}
+
+impl Treasury {
+    pub fn space() -> usize {
+        8   // discriminator
+        + 32 // authority
+        + 1  // bump
+    }
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct Beneficiary {
     pub wallet: Pubkey,  // heir's wallet address

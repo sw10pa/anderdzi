@@ -49,4 +49,7 @@ pub enum AnderdziError {
 
     #[msg("Invalid watcher — cannot be the zero pubkey")]
     InvalidWatcher,
+
+    #[msg("Beneficiary accounts must match the stored list in order")]
+    BeneficiaryAccountMismatch,
 }

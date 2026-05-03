@@ -54,14 +54,16 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 
 ---
 
-## Milestone 5 — Distribution
+## Milestone 5 — Distribution ✅
 *Goal: assets distribute proportionally to beneficiaries after grace period*
 
-- [ ] `distribute` instruction — callable by anyone after grace period elapses (`triggered_at + grace_period ≤ now`); automatically pushes SOL to all beneficiary wallets
-- [ ] SOL split by share basis points
-- [ ] SPL token support
-- [ ] Unit tests for full distribution flow
-- [ ] End-to-end test: create → deposit → trigger → distribute
+- [x] `initialize_treasury` instruction — one-time setup; creates a protocol treasury PDA seeded by `[b"treasury"]`; the signer becomes the fee authority
+- [x] `distribute` instruction — permissionless; callable after grace period elapses (`triggered_at + grace_period ≤ now`); splits `total_deposited` proportionally to beneficiaries; 1% protocol fee + rounding dust go to treasury; vault auto-closes and rent is also sent to treasury
+- [x] `withdraw_fees` instruction — authority-only; drains accumulated fees from the treasury PDA to a destination wallet
+- [x] SOL split by share basis points; beneficiary wallets passed as `remaining_accounts` and validated against stored list
+- [x] Unit tests — 5 tests covering treasury init, NotTriggered guard, non-authority withdraw rejection, zero-balance withdrawal rejection; full happy path and end-to-end flow require clock manipulation (tracked for LiteSVM integration)
+- [ ] SPL token support — deferred to a later milestone
+- [ ] End-to-end test: create → deposit → trigger → distribute — requires clock manipulation (LiteSVM)
 
 ---
 

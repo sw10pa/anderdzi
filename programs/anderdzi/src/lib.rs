@@ -18,6 +18,10 @@ use state::Beneficiary;
 pub mod anderdzi {
     use super::*;
 
+    pub fn initialize_treasury(ctx: Context<InitializeTreasury>) -> Result<()> {
+        instructions::initialize_treasury::handler(ctx)
+    }
+
     pub fn create_vault(
         ctx: Context<CreateVault>,
         watcher: Pubkey,
@@ -62,6 +66,14 @@ pub mod anderdzi {
 
     pub fn cancel_trigger(ctx: Context<CancelTrigger>) -> Result<()> {
         instructions::cancel_trigger::handler(ctx)
+    }
+
+    pub fn distribute(ctx: Context<Distribute>) -> Result<()> {
+        instructions::distribute::handler(ctx)
+    }
+
+    pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
+        instructions::withdraw_fees::handler(ctx)
     }
 
     pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {

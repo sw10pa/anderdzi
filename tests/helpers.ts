@@ -18,6 +18,14 @@ export function vaultAddress(owner: PublicKey): PublicKey {
   return pda;
 }
 
+export function treasuryAddress(): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("treasury")],
+    program.programId
+  );
+  return pda;
+}
+
 export async function airdrop(to: PublicKey, lamports: number): Promise<void> {
   const sig = await provider.connection.requestAirdrop(to, lamports);
   await provider.connection.confirmTransaction(sig, "confirmed");
