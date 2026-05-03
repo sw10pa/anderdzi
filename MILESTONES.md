@@ -61,9 +61,9 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 - [x] `distribute` instruction — permissionless; callable after grace period elapses (`triggered_at + grace_period ≤ now`); splits `total_deposited` proportionally to beneficiaries; 1% protocol fee + rounding dust go to treasury; vault auto-closes and rent is also sent to treasury
 - [x] `withdraw_fees` instruction — authority-only; drains accumulated fees from the treasury PDA to a destination wallet
 - [x] SOL split by share basis points; beneficiary wallets passed as `remaining_accounts` and validated against stored list
-- [x] Unit tests — 5 tests covering treasury init, NotTriggered guard, non-authority withdraw rejection, zero-balance withdrawal rejection; full happy path and end-to-end flow require clock manipulation (tracked for LiteSVM integration)
+- [x] Unit tests — 5 tests covering treasury init, NotTriggered guard, non-authority withdraw rejection, zero-balance withdrawal rejection
+- [x] End-to-end test (`tests/e2e.ts`) — 8 tests covering full lifecycle with clock manipulation via LiteSVM: treasury init → vault creation → NotInactive guard → trigger → AlreadyTriggered guard → GracePeriodActive guard → proportional distribution with exact lamport assertions → fee withdrawal
 - [ ] SPL token support — deferred to a later milestone
-- [ ] End-to-end test: create → deposit → trigger → distribute — requires clock manipulation (LiteSVM)
 
 ---
 
