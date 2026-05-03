@@ -19,13 +19,13 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 ---
 
 ## Milestone 2 — Beneficiaries ✅
-*Goal: owner can set, update, and remove beneficiaries with percentage splits*
+*Goal: owner can set and update beneficiaries with percentage splits*
 
-- [x] `set_beneficiaries` instruction — stores beneficiary wallet addresses + share basis points; replaces entire list on each call
+- [x] `update_beneficiaries` instruction — stores beneficiary wallet addresses + share basis points; replaces entire list on each call
 - [x] Validation: shares must sum to 10000 bps (100%)
 - [x] Validation: max 10 beneficiaries
 - [x] Validation: list cannot be empty
-- [x] Unit tests for beneficiary management — 6 tests covering all cases
+- [x] Unit tests for beneficiary management — 7 tests covering all cases
 - [x] Simplified to plain wallet addresses (no hashing) — distribution will be automatic in Milestone 5
 
 ---
@@ -43,20 +43,21 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 
 ---
 
-## Milestone 4 — Trigger & Grace Period
-*Goal: vault can be triggered after inactivity and cancelled during grace period*
+## Milestone 4 — Trigger & Grace Period ✅
+*Goal: vault can be triggered after inactivity and cancelled by the owner*
 
-- [ ] `trigger` instruction — callable by anyone after inactivity period elapses
-- [ ] `cancel_trigger` instruction — owner cancels during grace period
-- [ ] Grace period: 7 days after trigger before distribution is allowed
-- [ ] Unit tests for trigger flow
+- [x] `trigger` instruction — permissionless; fires after inactivity period elapses; sets `triggered_at`
+- [x] `cancel_trigger` instruction — owner-only; callable at any time while vault is triggered; calls `touch()` to reset the inactivity timer and clear `triggered_at`
+- [x] Refactor: `create_vault` now requires beneficiaries at creation — a vault can never exist without heirs
+- [x] Beneficiary validation extracted to `Vault::set_beneficiaries()` — shared by `create_vault` and `update_beneficiaries`
+- [x] Unit tests — 3 tests covering error paths; happy path (trigger fires, cancel clears it) requires clock manipulation and is tracked for LiteSVM integration
 
 ---
 
 ## Milestone 5 — Distribution
 *Goal: assets distribute proportionally to beneficiaries after grace period*
 
-- [ ] `distribute` instruction — callable by anyone after grace period; automatically pushes SOL to all beneficiary wallets
+- [ ] `distribute` instruction — callable by anyone after grace period elapses (`triggered_at + grace_period ≤ now`); automatically pushes SOL to all beneficiary wallets
 - [ ] SOL split by share basis points
 - [ ] SPL token support
 - [ ] Unit tests for full distribution flow

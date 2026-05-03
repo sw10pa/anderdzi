@@ -3,7 +3,7 @@ use anchor_lang::{
     system_program::{transfer, Transfer},
 };
 
-use crate::{errors::AnderdziError, state::Vault};
+use crate::{errors::AnderdziError, state::{Beneficiary, Vault}};
 
 #[derive(Accounts)]
 pub struct CreateVault<'info> {
@@ -26,6 +26,7 @@ pub fn handler(
     inactivity_period: i64,
     grace_period: i64,
     deposit_amount: u64,
+    beneficiaries: Vec<Beneficiary>,
 ) -> Result<()> {
     require!(
         inactivity_period >= Vault::MIN_INACTIVITY_PERIOD,
@@ -50,11 +51,10 @@ pub fn handler(
     vault.watcher = watcher;
     vault.inactivity_period = inactivity_period;
     vault.grace_period = grace_period;
-    vault.triggered_at = None;
-    vault.beneficiaries = Vec::new();
     vault.total_deposited = 0;
     vault.bump = ctx.bumps.vault;
     vault.touch()?;
+    vault.set_beneficiaries(beneficiaries)?;
 
     if deposit_amount > 0 {
         transfer(

@@ -24,8 +24,9 @@ pub mod anderdzi {
         inactivity_period: i64,
         grace_period: i64,
         deposit_amount: u64,
+        beneficiaries: Vec<Beneficiary>,
     ) -> Result<()> {
-        instructions::create_vault::handler(ctx, watcher, inactivity_period, grace_period, deposit_amount)
+        instructions::create_vault::handler(ctx, watcher, inactivity_period, grace_period, deposit_amount, beneficiaries)
     }
 
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
@@ -48,11 +49,19 @@ pub mod anderdzi {
         instructions::update_watcher::handler(ctx, new_watcher)
     }
 
-    pub fn set_beneficiaries(
-        ctx: Context<SetBeneficiaries>,
+    pub fn update_beneficiaries(
+        ctx: Context<UpdateBeneficiaries>,
         beneficiaries: Vec<Beneficiary>,
     ) -> Result<()> {
-        instructions::set_beneficiaries::handler(ctx, beneficiaries)
+        instructions::update_beneficiaries::handler(ctx, beneficiaries)
+    }
+
+    pub fn trigger(ctx: Context<Trigger>) -> Result<()> {
+        instructions::trigger::handler(ctx)
+    }
+
+    pub fn cancel_trigger(ctx: Context<CancelTrigger>) -> Result<()> {
+        instructions::cancel_trigger::handler(ctx)
     }
 
     pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {

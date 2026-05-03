@@ -5,6 +5,7 @@ import { assert } from "chai";
 import { provider, program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
 
 const watcher = Keypair.generate();
+const heir    = Keypair.generate();
 
 // ── create_vault ─────────────────────────────────────────────────────────────
 
@@ -18,7 +19,8 @@ describe("create_vault", () => {
         watcher.publicKey,
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
-        new anchor.BN(LAMPORTS_PER_SOL)
+        new anchor.BN(LAMPORTS_PER_SOL),
+        [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
       .accounts({ owner })
       .rpc();
@@ -30,7 +32,9 @@ describe("create_vault", () => {
     assert.equal(account.gracePeriod.toNumber(), SEVEN_DAYS);
     assert.equal(account.totalDeposited.toNumber(), LAMPORTS_PER_SOL);
     assert.isNull(account.triggeredAt);
-    assert.isEmpty(account.beneficiaries);
+    assert.lengthOf(account.beneficiaries, 1);
+    assert.ok(account.beneficiaries[0].wallet.equals(heir.publicKey));
+    assert.equal(account.beneficiaries[0].shareBps, 10000);
 
     const vaultBalance = await provider.connection.getBalance(vault);
     assert.isAtLeast(vaultBalance, LAMPORTS_PER_SOL);
@@ -45,7 +49,8 @@ describe("create_vault", () => {
         watcher.publicKey,
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
-        new anchor.BN(0)
+        new anchor.BN(0),
+        [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
       .accounts({ owner: owner.publicKey })
       .signers([owner])
@@ -61,7 +66,7 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS - 1), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS - 1), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
@@ -78,7 +83,7 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS - 1), new anchor.BN(0))
+        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS - 1), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
@@ -95,7 +100,7 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(owner.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+        .createVault(owner.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
@@ -112,7 +117,7 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(PublicKey.default, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+        .createVault(PublicKey.default, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
@@ -128,7 +133,7 @@ describe("create_vault", () => {
 
     try {
       await program.methods
-        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+        .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
         .accounts({ owner })
         .rpc();
       assert.fail("expected error was not thrown");
@@ -329,7 +334,7 @@ describe("close_vault", () => {
     await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
 
     await program.methods
-      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: heir.publicKey, shareBps: 10000 }])
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();

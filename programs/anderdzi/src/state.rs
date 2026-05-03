@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::errors::AnderdziError;
+
 #[account]
 pub struct Vault {
     pub owner: Pubkey,
@@ -21,6 +23,29 @@ impl Vault {
     pub fn touch(&mut self) -> Result<()> {
         self.last_heartbeat = Clock::get()?.unix_timestamp;
         self.triggered_at = None;
+        Ok(())
+    }
+
+    pub fn set_beneficiaries(&mut self, beneficiaries: Vec<Beneficiary>) -> Result<()> {
+        require!(!beneficiaries.is_empty(), AnderdziError::NoBeneficiaries);
+        require!(
+            beneficiaries.len() <= Self::MAX_BENEFICIARIES,
+            AnderdziError::TooManyBeneficiaries
+        );
+
+        let total_bps: u32 = beneficiaries.iter().map(|b| b.share_bps as u32).sum();
+        require!(total_bps == 10_000, AnderdziError::InvalidShares);
+
+        for i in 0..beneficiaries.len() {
+            for j in (i + 1)..beneficiaries.len() {
+                require!(
+                    beneficiaries[i].wallet != beneficiaries[j].wallet,
+                    AnderdziError::DuplicateBeneficiary
+                );
+            }
+        }
+
+        self.beneficiaries = beneficiaries;
         Ok(())
     }
 

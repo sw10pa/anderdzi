@@ -4,9 +4,6 @@ import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
 import { program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
 
-// NOTE: triggered_at clearing via touch() is not testable here — no trigger
-// instruction yet. Tests for that behaviour will be added in trigger.ts.
-
 describe("ping", () => {
   let owner: Keypair;
   let watcher: Keypair;
@@ -16,7 +13,7 @@ describe("ping", () => {
     watcher = Keypair.generate();
     await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
     await program.methods
-      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }])
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();
@@ -68,7 +65,7 @@ describe("witness_activity", () => {
     watcher = Keypair.generate();
     await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
     await program.methods
-      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0), [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }])
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();

@@ -4,15 +4,22 @@ import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
 import { provider, program, vaultAddress, airdrop, SIX_MONTHS, SEVEN_DAYS } from "./helpers";
 
-describe("set_beneficiaries", () => {
+describe("update_beneficiaries", () => {
   let owner: Keypair;
 
   before(async () => {
     owner = Keypair.generate();
     await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
     const watcher = Keypair.generate();
+    const initialHeir = Keypair.generate().publicKey;
     await program.methods
-      .createVault(watcher.publicKey, new anchor.BN(SIX_MONTHS), new anchor.BN(SEVEN_DAYS), new anchor.BN(0))
+      .createVault(
+        watcher.publicKey,
+        new anchor.BN(SIX_MONTHS),
+        new anchor.BN(SEVEN_DAYS),
+        new anchor.BN(0),
+        [{ wallet: initialHeir, shareBps: 10000 }]
+      )
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();
@@ -26,13 +33,13 @@ describe("set_beneficiaries", () => {
       .rpc();
   });
 
-  it("sets a list of beneficiaries that sum to 100%", async () => {
+  it("updates the beneficiary list", async () => {
     const vault = vaultAddress(owner.publicKey);
     const alice = Keypair.generate().publicKey;
     const bob   = Keypair.generate().publicKey;
 
     await program.methods
-      .setBeneficiaries([
+      .updateBeneficiaries([
         { wallet: alice, shareBps: 6000 },
         { wallet: bob,   shareBps: 4000 },
       ])
@@ -52,7 +59,7 @@ describe("set_beneficiaries", () => {
     const carol = Keypair.generate().publicKey;
 
     await program.methods
-      .setBeneficiaries([{ wallet: carol, shareBps: 10000 }])
+      .updateBeneficiaries([{ wallet: carol, shareBps: 10000 }])
       .accounts({ owner: owner.publicKey })
       .signers([owner])
       .rpc();
@@ -68,7 +75,7 @@ describe("set_beneficiaries", () => {
 
     try {
       await program.methods
-        .setBeneficiaries([
+        .updateBeneficiaries([
           { wallet: alice, shareBps: 6000 },
           { wallet: bob,   shareBps: 3000 },
         ])
@@ -85,7 +92,7 @@ describe("set_beneficiaries", () => {
   it("rejects an empty beneficiary list", async () => {
     try {
       await program.methods
-        .setBeneficiaries([])
+        .updateBeneficiaries([])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
@@ -104,7 +111,7 @@ describe("set_beneficiaries", () => {
 
     try {
       await program.methods
-        .setBeneficiaries(tooMany)
+        .updateBeneficiaries(tooMany)
         .accounts({ owner: owner.publicKey })
         .signers([owner])
         .rpc();
@@ -120,7 +127,7 @@ describe("set_beneficiaries", () => {
 
     try {
       await program.methods
-        .setBeneficiaries([
+        .updateBeneficiaries([
           { wallet: alice, shareBps: 5000 },
           { wallet: alice, shareBps: 5000 },
         ])
@@ -140,7 +147,7 @@ describe("set_beneficiaries", () => {
 
     try {
       await program.methods
-        .setBeneficiaries([{ wallet: stranger.publicKey, shareBps: 10000 }])
+        .updateBeneficiaries([{ wallet: stranger.publicKey, shareBps: 10000 }])
         .accounts({ owner: stranger.publicKey })
         .signers([stranger])
         .rpc();
