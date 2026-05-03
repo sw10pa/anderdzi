@@ -36,18 +36,17 @@ pub fn handler(
         AnderdziError::GracePeriodTooShort
     );
 
-    let clock = Clock::get()?;
     let vault = &mut ctx.accounts.vault;
 
     vault.owner = ctx.accounts.owner.key();
     vault.watcher = watcher;
     vault.inactivity_period = inactivity_period;
-    vault.last_heartbeat = clock.unix_timestamp;
     vault.grace_period = grace_period;
     vault.triggered_at = None;
     vault.beneficiaries = Vec::new();
     vault.total_deposited = 0;
     vault.bump = ctx.bumps.vault;
+    vault.touch()?;
 
     if deposit_amount > 0 {
         transfer(

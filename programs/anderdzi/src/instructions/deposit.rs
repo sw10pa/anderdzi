@@ -33,7 +33,9 @@ pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         amount,
     )?;
 
-    ctx.accounts.vault.total_deposited += amount;
+    let vault = &mut ctx.accounts.vault;
+    vault.total_deposited += amount;
+    vault.touch()?;
 
     Ok(())
 }

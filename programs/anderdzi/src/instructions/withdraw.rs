@@ -22,12 +22,13 @@ pub fn handler(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         AnderdziError::InsufficientFunds
     );
 
-    // Transfer SOL out of the PDA via direct lamport manipulation.
-    // PDAs cannot sign for system_program::transfer, so this is the correct approach.
+    // PDAs cannot sign for system_program::transfer; direct lamport manipulation is correct here.
     **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= amount;
     **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += amount;
 
-    ctx.accounts.vault.total_deposited -= amount;
+    let vault = &mut ctx.accounts.vault;
+    vault.total_deposited -= amount;
+    vault.touch()?;
 
     Ok(())
 }

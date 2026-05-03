@@ -18,6 +18,11 @@ impl Vault {
     pub const MIN_INACTIVITY_PERIOD: i64 = 15_552_000; // 6 months in seconds
     pub const MIN_GRACE_PERIOD: i64 = 604_800; // 7 days in seconds
 
+    pub fn touch(&mut self) -> Result<()> {
+        self.last_heartbeat = Clock::get()?.unix_timestamp;
+        Ok(())
+    }
+
     pub fn space(beneficiary_count: usize) -> usize {
         8           // discriminator
         + 32        // owner
