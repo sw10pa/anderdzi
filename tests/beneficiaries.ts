@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import anchor from "@coral-xyz/anchor";
 import { AnchorError } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";

@@ -1,4 +1,4 @@
-import * as anchor from "@coral-xyz/anchor";
+import anchor from "@coral-xyz/anchor";
 import { AnchorError } from "@coral-xyz/anchor";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
@@ -107,7 +107,7 @@ describe("witness_activity", () => {
   it("watcher resets the inactivity timer", async () => {
     const vault = vaultAddress(owner.publicKey);
     const before = await program.account.vault.fetch(vault);
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 3000));
 
     await program.methods
       .witnessActivity()
