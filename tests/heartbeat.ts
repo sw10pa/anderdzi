@@ -24,6 +24,7 @@ describe("ping", () => {
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
         new anchor.BN(0),
+        false,
         [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }]
       )
       .accounts({ owner: owner.publicKey })
@@ -89,6 +90,7 @@ describe("witness_activity", () => {
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
         new anchor.BN(0),
+        false,
         [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }]
       )
       .accounts({ owner: owner.publicKey })

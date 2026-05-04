@@ -32,6 +32,7 @@ anderdzi/
 │       ├── lib.rs         # Program entrypoint
 │       ├── state.rs       # Account structures
 │       ├── errors.rs      # Custom error codes
+│       ├── marinade.rs    # Marinade Finance CPI adapter
 │       └── instructions/  # One file per instruction
 ├── bot/                   # Activity watcher + Telegram bot (Rust)
 │   └── src/
@@ -84,7 +85,9 @@ anchor build
 ### Run tests
 
 ```bash
-anchor test
+anchor build
+cargo test                                          # Rust unit tests
+node --test --import tsx tests/e2e.ts tests/staking.ts  # Integration tests
 ```
 
 ### Run the bot

@@ -16,6 +16,10 @@ pub struct Withdraw<'info> {
 }
 
 pub fn handler(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+    require!(
+        !ctx.accounts.vault.staking_enabled,
+        AnderdziError::UseUnstakeWithdraw
+    );
     require!(amount > 0, AnderdziError::ZeroAmount);
     require!(
         amount <= ctx.accounts.vault.total_deposited,

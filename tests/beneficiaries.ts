@@ -25,6 +25,7 @@ describe("update_beneficiaries", () => {
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
         new anchor.BN(0),
+        false,
         [{ wallet: initialHeir, shareBps: 10000 }]
       )
       .accounts({ owner: owner.publicKey })

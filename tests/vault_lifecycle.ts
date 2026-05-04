@@ -27,6 +27,7 @@ describe("create_vault", () => {
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
         new anchor.BN(LAMPORTS_PER_SOL),
+        false,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
       .accounts({ owner })
@@ -57,6 +58,7 @@ describe("create_vault", () => {
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
         new anchor.BN(0),
+        false,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
       .accounts({ owner: owner.publicKey })
@@ -80,6 +82,7 @@ describe("create_vault", () => {
           new anchor.BN(SIX_MONTHS - 1),
           new anchor.BN(SEVEN_DAYS),
           new anchor.BN(0),
+          false,
           [{ wallet: heir.publicKey, shareBps: 10000 }]
         )
         .accounts({ owner: owner.publicKey })
@@ -106,6 +109,7 @@ describe("create_vault", () => {
           new anchor.BN(SIX_MONTHS),
           new anchor.BN(SEVEN_DAYS - 1),
           new anchor.BN(0),
+          false,
           [{ wallet: heir.publicKey, shareBps: 10000 }]
         )
         .accounts({ owner: owner.publicKey })
@@ -132,6 +136,7 @@ describe("create_vault", () => {
           new anchor.BN(SIX_MONTHS),
           new anchor.BN(SEVEN_DAYS),
           new anchor.BN(0),
+          false,
           [{ wallet: heir.publicKey, shareBps: 10000 }]
         )
         .accounts({ owner: owner.publicKey })
@@ -158,6 +163,7 @@ describe("create_vault", () => {
           new anchor.BN(SIX_MONTHS),
           new anchor.BN(SEVEN_DAYS),
           new anchor.BN(0),
+          false,
           [{ wallet: heir.publicKey, shareBps: 10000 }]
         )
         .accounts({ owner: owner.publicKey })
@@ -180,6 +186,7 @@ describe("create_vault", () => {
           new anchor.BN(SIX_MONTHS),
           new anchor.BN(SEVEN_DAYS),
           new anchor.BN(0),
+          false,
           [{ wallet: heir.publicKey, shareBps: 10000 }]
         )
         .accounts({ owner })
@@ -408,6 +415,7 @@ describe("close_vault", () => {
         new anchor.BN(SIX_MONTHS),
         new anchor.BN(SEVEN_DAYS),
         new anchor.BN(0),
+        false,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
       .accounts({ owner: owner.publicKey })

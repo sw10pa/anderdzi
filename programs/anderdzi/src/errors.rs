@@ -52,4 +52,22 @@ pub enum AnderdziError {
 
     #[msg("Beneficiary accounts must match the stored list in order")]
     BeneficiaryAccountMismatch,
+
+    #[msg("Staking is not enabled for this vault")]
+    StakingNotEnabled,
+
+    #[msg("Invalid Marinade program account")]
+    InvalidMarinadeProgram,
+
+    #[msg("Invalid Marinade state account")]
+    InvalidMarinadeState,
+
+    #[msg("Invalid mSOL mint account")]
+    InvalidMsolMint,
+
+    #[msg("No yield available to harvest")]
+    NoYieldAvailable,
+
+    #[msg("Staking is enabled — use unstake_withdraw instead")]
+    UseUnstakeWithdraw,
 }

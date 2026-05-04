@@ -1,5 +1,6 @@
 // @coral-xyz/anchor is a CJS module; Node 24 runs this file as ESM. Named imports
 // from CJS don't work — use the default export and destructure what's needed.
+import { describe, it, before } from "node:test";
 import pkg from "@coral-xyz/anchor";
 import type { Idl, Program } from "@coral-xyz/anchor";
 import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
@@ -88,6 +89,7 @@ describe("e2e: create → deposit → trigger → distribute", () => {
         new BN(SIX_MONTHS),
         new BN(SEVEN_DAYS),
         new BN(DEPOSIT),
+        false,
         [
           { wallet: heir1.publicKey, shareBps: 6000 },
           { wallet: heir2.publicKey, shareBps: 4000 },

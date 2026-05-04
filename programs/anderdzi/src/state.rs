@@ -12,6 +12,7 @@ pub struct Vault {
     pub triggered_at: Option<i64>,
     pub beneficiaries: Vec<Beneficiary>,
     pub total_deposited: u64,
+    pub staking_enabled: bool,
     pub bump: u8,
 }
 
@@ -59,6 +60,7 @@ impl Vault {
         + 9         // triggered_at (Option<i64>)
         + 4 + (beneficiary_count * Beneficiary::SIZE) // beneficiaries vec
         + 8         // total_deposited
+        + 1         // staking_enabled
         + 1 // bump
     }
 }

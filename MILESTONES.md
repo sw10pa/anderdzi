@@ -72,14 +72,22 @@ _Goal: assets distribute proportionally to beneficiaries after grace period_
 
 ---
 
-## Milestone 6 — Marinade Yield
+## Milestone 6 — Marinade Yield ✅
 
 _Goal: deposited SOL earns yield via Marinade Finance_
 
-- [ ] Auto-stake SOL on deposit via Marinade
-- [ ] Track mSOL balance in vault
-- [ ] Unstake on distribution — heirs receive SOL + yield
-- [ ] Integration tests with Marinade on devnet
+- [x] `stake_deposit` instruction — owner deposits SOL which is auto-staked via Marinade CPI; vault receives mSOL
+- [x] `unstake_withdraw` instruction — liquid-unstakes proportional mSOL and returns SOL to owner
+- [x] `harvest_yield` instruction — permissionless; transfers 50% of accrued yield (mSOL) to protocol treasury
+- [x] Marinade CPI adapter (`marinade.rs`) — manual `invoke_signed` (no external crate dependency); exchange rate math with u128 overflow protection
+- [x] Vault `staking_enabled` flag — opt-in per vault at creation; plain `withdraw` blocked when staking enabled
+- [x] Address constraints on all Marinade accounts (program, state, mSOL mint)
+- [x] Treasury mSOL ATA bound to treasury PDA authority (prevents spoofing)
+- [x] Marinade state price sanity check (1–10 SOL/mSOL range)
+- [x] `close_vault` blocked when staking enabled — owner must unstake all mSOL first
+- [x] Unit tests — 8 Rust tests for yield math, overflow, edge cases
+- [x] Integration tests (`tests/staking.ts`) — 9 tests covering vault creation with staking, guards, close_vault rejection, off-chain yield math
+- [ ] Full CPI integration test with mainnet-forked localnet (requires Marinade program deployed; deferred)
 
 ---
 

@@ -29,6 +29,7 @@ pub fn handler(
     inactivity_period: i64,
     grace_period: i64,
     deposit_amount: u64,
+    staking_enabled: bool,
     beneficiaries: Vec<Beneficiary>,
 ) -> Result<()> {
     require!(
@@ -52,6 +53,7 @@ pub fn handler(
     vault.inactivity_period = inactivity_period;
     vault.grace_period = grace_period;
     vault.total_deposited = 0;
+    vault.staking_enabled = staking_enabled;
     vault.bump = ctx.bumps.vault;
     vault.touch()?;
     vault.set_beneficiaries(beneficiaries)?;

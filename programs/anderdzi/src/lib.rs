@@ -9,6 +9,7 @@ declare_id!("6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x");
 
 pub mod errors;
 pub mod instructions;
+pub mod marinade;
 pub mod state;
 
 use instructions::*;
@@ -28,6 +29,7 @@ pub mod anderdzi {
         inactivity_period: i64,
         grace_period: i64,
         deposit_amount: u64,
+        staking_enabled: bool,
         beneficiaries: Vec<Beneficiary>,
     ) -> Result<()> {
         instructions::create_vault::handler(
@@ -36,6 +38,7 @@ pub mod anderdzi {
             inactivity_period,
             grace_period,
             deposit_amount,
+            staking_enabled,
             beneficiaries,
         )
     }
@@ -85,5 +88,17 @@ pub mod anderdzi {
 
     pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {
         instructions::close_vault::handler(ctx)
+    }
+
+    pub fn stake_deposit(ctx: Context<StakeDeposit>, amount: u64) -> Result<()> {
+        instructions::stake_deposit::handler(ctx, amount)
+    }
+
+    pub fn unstake_withdraw(ctx: Context<UnstakeWithdraw>, sol_amount: u64) -> Result<()> {
+        instructions::unstake_withdraw::handler(ctx, sol_amount)
+    }
+
+    pub fn harvest_yield(ctx: Context<HarvestYield>) -> Result<()> {
+        instructions::harvest_yield::handler(ctx)
     }
 }
