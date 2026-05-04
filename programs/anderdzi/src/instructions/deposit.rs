@@ -34,7 +34,10 @@ pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     )?;
 
     let vault = &mut ctx.accounts.vault;
-    vault.total_deposited += amount;
+    vault.total_deposited = vault
+        .total_deposited
+        .checked_add(amount)
+        .ok_or(AnderdziError::InsufficientFunds)?;
     vault.touch()?;
 
     Ok(())

@@ -39,7 +39,10 @@ pub fn handler(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
         .try_borrow_mut_lamports()? += amount;
 
     let vault = &mut ctx.accounts.vault;
-    vault.total_deposited -= amount;
+    vault.total_deposited = vault
+        .total_deposited
+        .checked_sub(amount)
+        .ok_or(AnderdziError::InsufficientFunds)?;
     vault.touch()?;
 
     Ok(())
