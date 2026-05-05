@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::{errors::AnderdziError, state::Vault};
 
 #[derive(Accounts)]
-pub struct UpdateWatcher<'info> {
+pub struct OptOutWatcher<'info> {
     #[account(
         mut,
         seeds = [b"vault", owner.key().as_ref()],
@@ -14,8 +14,7 @@ pub struct UpdateWatcher<'info> {
     pub owner: Signer<'info>,
 }
 
-pub fn handler(ctx: Context<UpdateWatcher>, new_watcher: Option<Pubkey>) -> Result<()> {
-    Vault::validate_watcher(new_watcher, &ctx.accounts.owner.key())?;
-    ctx.accounts.vault.watcher = new_watcher;
+pub fn handler(ctx: Context<OptOutWatcher>) -> Result<()> {
+    ctx.accounts.vault.watcher_enabled = false;
     Ok(())
 }

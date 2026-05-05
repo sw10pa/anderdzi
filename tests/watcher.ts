@@ -1,4 +1,3 @@
-// @coral-xyz/anchor is a CJS module; Node 24 runs this file as ESM.
 import { describe, it, before } from "node:test";
 import pkg from "@coral-xyz/anchor";
 import type { Idl, Program } from "@coral-xyz/anchor";
@@ -46,12 +45,11 @@ function treasuryPDA(): PublicKey {
   )[0];
 }
 
-describe("watcher: optional watcher and admin rotation", () => {
+describe("watcher: opt-in/opt-out and witness_activity", () => {
   const authority = Keypair.generate();
   const owner = Keypair.generate();
   const ownerNoWatcher = Keypair.generate();
   const watcher = Keypair.generate();
-  const newWatcher = Keypair.generate();
   const heir = Keypair.generate();
   const treasury = treasuryPDA();
 
@@ -62,45 +60,48 @@ describe("watcher: optional watcher and admin rotation", () => {
     client.airdrop(watcher.publicKey, BigInt(1 * LAMPORTS_PER_SOL));
   });
 
-  it("initializes treasury", async () => {
+  it("initializes treasury with default watcher", async () => {
     await program.methods
-      .initializeTreasury()
+      .initializeTreasury(watcher.publicKey)
       .accounts({ authority: authority.publicKey })
       .signers([authority])
       .preInstructions(uniquify())
       .rpc();
+
+    const acc = await program.account.treasury.fetch(treasury);
+    assert.ok(acc.defaultWatcher.equals(watcher.publicKey));
   });
 
-  it("creates a vault with a watcher", async () => {
+  it("creates a vault with watcher enabled", async () => {
     await program.methods
       .createVault(
-        watcher.publicKey,
+        true,
         new BN(SIX_MONTHS),
         new BN(SEVEN_DAYS),
         new BN(LAMPORTS_PER_SOL),
         false,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
-      .accounts({ owner: owner.publicKey })
+      .accounts({ owner: owner.publicKey, treasury })
       .signers([owner])
       .preInstructions(uniquify())
       .rpc();
 
     const vault = await program.account.vault.fetch(vaultPDA(owner.publicKey));
-    assert.ok(vault.watcher.equals(watcher.publicKey));
+    assert.isTrue(vault.watcherEnabled);
   });
 
-  it("creates a vault without a watcher (null)", async () => {
+  it("creates a vault with watcher disabled", async () => {
     await program.methods
       .createVault(
-        null,
+        false,
         new BN(SIX_MONTHS),
         new BN(SEVEN_DAYS),
         new BN(LAMPORTS_PER_SOL),
         false,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
-      .accounts({ owner: ownerNoWatcher.publicKey })
+      .accounts({ owner: ownerNoWatcher.publicKey, treasury })
       .signers([ownerNoWatcher])
       .preInstructions(uniquify())
       .rpc();
@@ -108,50 +109,43 @@ describe("watcher: optional watcher and admin rotation", () => {
     const vault = await program.account.vault.fetch(
       vaultPDA(ownerNoWatcher.publicKey)
     );
-    assert.isNull(vault.watcher);
+    assert.isFalse(vault.watcherEnabled);
   });
 
-  it("witness_activity rejected on vault with no watcher", async () => {
-    const vault = vaultPDA(ownerNoWatcher.publicKey);
+  // -- ping --
 
-    try {
-      await program.methods
-        .witnessActivity()
-        .accounts({ vault, watcher: watcher.publicKey })
-        .signers([watcher])
-        .preInstructions(uniquify())
-        .rpc();
-      assert.fail("expected error was not thrown");
-    } catch (err) {
-      assert.instanceOf(err, AnchorError);
-      assert.equal((err as AnchorError).error.errorCode.code, "WatcherNotSet");
-    }
-  });
-
-  it("admin_rotate_watcher rotates watcher via treasury authority", async () => {
+  it("ping resets the inactivity timer", async () => {
     const vault = vaultPDA(owner.publicKey);
+    const before = await program.account.vault.fetch(vault);
+
+    const clock = client.getClock();
+    clock.unixTimestamp += BigInt(10);
+    client.setClock(clock);
 
     await program.methods
-      .adminRotateWatcher(owner.publicKey, newWatcher.publicKey)
-      .accounts({ vault, treasury, authority: authority.publicKey })
-      .signers([authority])
+      .ping()
+      .accounts({ owner: owner.publicKey })
+      .signers([owner])
       .preInstructions(uniquify())
       .rpc();
 
-    const account = await program.account.vault.fetch(vault);
-    assert.ok(account.watcher.equals(newWatcher.publicKey));
+    const after = await program.account.vault.fetch(vault);
+    assert.isAbove(
+      after.lastHeartbeat.toNumber(),
+      before.lastHeartbeat.toNumber()
+    );
+    assert.isNull(after.triggeredAt);
   });
 
-  it("admin_rotate_watcher rejects non-authority signer", async () => {
-    const vault = vaultPDA(owner.publicKey);
-    const impostor = Keypair.generate();
-    client.airdrop(impostor.publicKey, BigInt(1 * LAMPORTS_PER_SOL));
+  it("ping rejects from a non-owner", async () => {
+    const stranger = Keypair.generate();
+    client.airdrop(stranger.publicKey, BigInt(LAMPORTS_PER_SOL));
 
     try {
       await program.methods
-        .adminRotateWatcher(owner.publicKey, watcher.publicKey)
-        .accounts({ vault, treasury, authority: impostor.publicKey })
-        .signers([impostor])
+        .ping()
+        .accounts({ owner: stranger.publicKey })
+        .signers([stranger])
         .preInstructions(uniquify())
         .rpc();
       assert.fail("expected error was not thrown");
@@ -160,65 +154,60 @@ describe("watcher: optional watcher and admin rotation", () => {
     }
   });
 
-  it("admin_rotate_watcher can set watcher to null", async () => {
+  // -- witness_activity --
+
+  it("witness_activity rejected on vault with watcher disabled", async () => {
+    const vault = vaultPDA(ownerNoWatcher.publicKey);
+
+    try {
+      await program.methods
+        .witnessActivity()
+        .accounts({ vault, treasury, watcher: watcher.publicKey })
+        .signers([watcher])
+        .preInstructions(uniquify())
+        .rpc();
+      assert.fail("expected error was not thrown");
+    } catch (err) {
+      assert.instanceOf(err, AnchorError);
+      assert.equal(
+        (err as AnchorError).error.errorCode.code,
+        "WatcherNotEnabled"
+      );
+    }
+  });
+
+  it("witness_activity succeeds with correct watcher on enabled vault", async () => {
     const vault = vaultPDA(owner.publicKey);
+    const before = await program.account.vault.fetch(vault);
+
+    const clock = client.getClock();
+    clock.unixTimestamp += BigInt(10);
+    client.setClock(clock);
 
     await program.methods
-      .adminRotateWatcher(owner.publicKey, null)
-      .accounts({ vault, treasury, authority: authority.publicKey })
-      .signers([authority])
+      .witnessActivity()
+      .accounts({ vault, treasury, watcher: watcher.publicKey })
+      .signers([watcher])
       .preInstructions(uniquify())
       .rpc();
 
-    const account = await program.account.vault.fetch(vault);
-    assert.isNull(account.watcher);
-  });
-
-  it("owner can opt into watcher via update_watcher", async () => {
-    await program.methods
-      .updateWatcher(watcher.publicKey)
-      .accounts({ owner: ownerNoWatcher.publicKey })
-      .signers([ownerNoWatcher])
-      .preInstructions(uniquify())
-      .rpc();
-
-    const vault = await program.account.vault.fetch(
-      vaultPDA(ownerNoWatcher.publicKey)
+    const after = await program.account.vault.fetch(vault);
+    assert.isAbove(
+      after.lastHeartbeat.toNumber(),
+      before.lastHeartbeat.toNumber()
     );
-    assert.ok(vault.watcher.equals(watcher.publicKey));
-  });
-
-  it("owner can opt out of watcher via update_watcher(null)", async () => {
-    await program.methods
-      .updateWatcher(null)
-      .accounts({ owner: ownerNoWatcher.publicKey })
-      .signers([ownerNoWatcher])
-      .preInstructions(uniquify())
-      .rpc();
-
-    const vault = await program.account.vault.fetch(
-      vaultPDA(ownerNoWatcher.publicKey)
-    );
-    assert.isNull(vault.watcher);
+    assert.isNull(after.triggeredAt);
   });
 
   it("witness_activity rejected with wrong watcher", async () => {
-    // First restore a watcher on ownerNoWatcher's vault
-    await program.methods
-      .updateWatcher(watcher.publicKey)
-      .accounts({ owner: ownerNoWatcher.publicKey })
-      .signers([ownerNoWatcher])
-      .preInstructions(uniquify())
-      .rpc();
-
-    const vault = vaultPDA(ownerNoWatcher.publicKey);
+    const vault = vaultPDA(owner.publicKey);
     const impostor = Keypair.generate();
     client.airdrop(impostor.publicKey, BigInt(1 * LAMPORTS_PER_SOL));
 
     try {
       await program.methods
         .witnessActivity()
-        .accounts({ vault, watcher: impostor.publicKey })
+        .accounts({ vault, treasury, watcher: impostor.publicKey })
         .signers([impostor])
         .preInstructions(uniquify())
         .rpc();
@@ -232,36 +221,14 @@ describe("watcher: optional watcher and admin rotation", () => {
     }
   });
 
-  it("witness_activity succeeds after admin rotation", async () => {
-    const vault = vaultPDA(owner.publicKey);
-
-    // Admin already rotated to newWatcher, rotate back to watcher for this test
-    await program.methods
-      .adminRotateWatcher(owner.publicKey, watcher.publicKey)
-      .accounts({ vault, treasury, authority: authority.publicKey })
-      .signers([authority])
-      .preInstructions(uniquify())
-      .rpc();
-
-    await program.methods
-      .witnessActivity()
-      .accounts({ vault, watcher: watcher.publicKey })
-      .signers([watcher])
-      .preInstructions(uniquify())
-      .rpc();
-
-    const account = await program.account.vault.fetch(vault);
-    assert.isNotNull(account.lastHeartbeat);
-  });
-
-  it("admin_rotate_watcher rejects setting watcher to vault owner", async () => {
+  it("witness_activity rejected with owner signing as watcher", async () => {
     const vault = vaultPDA(owner.publicKey);
 
     try {
       await program.methods
-        .adminRotateWatcher(owner.publicKey, owner.publicKey)
-        .accounts({ vault, treasury, authority: authority.publicKey })
-        .signers([authority])
+        .witnessActivity()
+        .accounts({ vault, treasury, watcher: owner.publicKey })
+        .signers([owner])
         .preInstructions(uniquify())
         .rpc();
       assert.fail("expected error was not thrown");
@@ -269,16 +236,87 @@ describe("watcher: optional watcher and admin rotation", () => {
       assert.instanceOf(err, AnchorError);
       assert.equal(
         (err as AnchorError).error.errorCode.code,
-        "WatcherCannotBeOwner"
+        "UnauthorizedWatcher"
       );
     }
   });
 
-  it("update_watcher rejects setting watcher to owner", async () => {
+  // -- opt-in/opt-out --
+
+  it("owner can opt out of watcher", async () => {
+    await program.methods
+      .optOutWatcher()
+      .accounts({ owner: owner.publicKey })
+      .signers([owner])
+      .preInstructions(uniquify())
+      .rpc();
+
+    const vault = await program.account.vault.fetch(vaultPDA(owner.publicKey));
+    assert.isFalse(vault.watcherEnabled);
+  });
+
+  it("owner can opt back into watcher", async () => {
+    await program.methods
+      .optInWatcher()
+      .accounts({ owner: owner.publicKey, treasury })
+      .signers([owner])
+      .preInstructions(uniquify())
+      .rpc();
+
+    const vault = await program.account.vault.fetch(vaultPDA(owner.publicKey));
+    assert.isTrue(vault.watcherEnabled);
+  });
+
+  // -- set_default_watcher --
+
+  it("set_default_watcher updates the treasury watcher", async () => {
+    const newWatcher = Keypair.generate();
+
+    await program.methods
+      .setDefaultWatcher(newWatcher.publicKey)
+      .accounts({ treasury, authority: authority.publicKey })
+      .signers([authority])
+      .preInstructions(uniquify())
+      .rpc();
+
+    const acc = await program.account.treasury.fetch(treasury);
+    assert.ok(acc.defaultWatcher.equals(newWatcher.publicKey));
+  });
+
+  it("set_default_watcher rejects non-authority", async () => {
+    const impostor = Keypair.generate();
+    client.airdrop(impostor.publicKey, BigInt(1 * LAMPORTS_PER_SOL));
+
     try {
       await program.methods
-        .updateWatcher(ownerNoWatcher.publicKey)
-        .accounts({ owner: ownerNoWatcher.publicKey })
+        .setDefaultWatcher(watcher.publicKey)
+        .accounts({ treasury, authority: impostor.publicKey })
+        .signers([impostor])
+        .preInstructions(uniquify())
+        .rpc();
+      assert.fail("expected error was not thrown");
+    } catch (err) {
+      assert.ok(err);
+    }
+  });
+
+  it("set_default_watcher can clear watcher (set to null)", async () => {
+    await program.methods
+      .setDefaultWatcher(null)
+      .accounts({ treasury, authority: authority.publicKey })
+      .signers([authority])
+      .preInstructions(uniquify())
+      .rpc();
+
+    const acc = await program.account.treasury.fetch(treasury);
+    assert.isNull(acc.defaultWatcher);
+  });
+
+  it("opt_in_watcher fails when no default watcher is configured", async () => {
+    try {
+      await program.methods
+        .optInWatcher()
+        .accounts({ owner: ownerNoWatcher.publicKey, treasury })
         .signers([ownerNoWatcher])
         .preInstructions(uniquify())
         .rpc();
@@ -287,7 +325,7 @@ describe("watcher: optional watcher and admin rotation", () => {
       assert.instanceOf(err, AnchorError);
       assert.equal(
         (err as AnchorError).error.errorCode.code,
-        "WatcherCannotBeOwner"
+        "NoDefaultWatcher"
       );
     }
   });

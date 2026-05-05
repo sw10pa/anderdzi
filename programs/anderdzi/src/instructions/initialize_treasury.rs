@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::Treasury;
+use crate::{errors::AnderdziError, state::Treasury};
 
 #[derive(Accounts)]
 pub struct InitializeTreasury<'info> {
@@ -17,9 +17,13 @@ pub struct InitializeTreasury<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<InitializeTreasury>) -> Result<()> {
+pub fn handler(ctx: Context<InitializeTreasury>, default_watcher: Option<Pubkey>) -> Result<()> {
+    if let Some(w) = default_watcher {
+        require!(w != Pubkey::default(), AnderdziError::InvalidWatcher);
+    }
     let treasury = &mut ctx.accounts.treasury;
     treasury.authority = ctx.accounts.authority.key();
+    treasury.default_watcher = default_watcher;
     treasury.bump = ctx.bumps.treasury;
     Ok(())
 }

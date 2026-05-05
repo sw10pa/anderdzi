@@ -44,12 +44,6 @@ pub enum AnderdziError {
     #[msg("Duplicate beneficiary wallet address")]
     DuplicateBeneficiary,
 
-    #[msg("Watcher cannot be the same as the vault owner")]
-    WatcherCannotBeOwner,
-
-    #[msg("Invalid watcher — cannot be the zero pubkey")]
-    InvalidWatcher,
-
     #[msg("Beneficiary accounts must match the stored list in order")]
     BeneficiaryAccountMismatch,
 
@@ -71,6 +65,15 @@ pub enum AnderdziError {
     #[msg("Staking is enabled — use unstake_withdraw instead")]
     UseUnstakeWithdraw,
 
-    #[msg("No watcher set for this vault - use manual ping instead")]
-    WatcherNotSet,
+    #[msg("Watcher is not enabled for this vault")]
+    WatcherNotEnabled,
+
+    #[msg("No default watcher configured in treasury")]
+    NoDefaultWatcher,
+
+    #[msg("Invalid watcher — cannot be the zero pubkey")]
+    InvalidWatcher,
+
+    #[msg("Watcher cannot be the same as the vault owner")]
+    WatcherCannotBeOwner,
 }

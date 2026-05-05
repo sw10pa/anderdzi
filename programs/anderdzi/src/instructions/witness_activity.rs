@@ -1,29 +1,41 @@
 use anchor_lang::prelude::*;
 
-use crate::{errors::AnderdziError, state::Vault};
+use crate::{
+    errors::AnderdziError,
+    state::{Treasury, Vault},
+};
 
 #[derive(Accounts)]
 pub struct WitnessActivity<'info> {
-    // Safety: Account<'info, Vault> verifies the discriminator and deserializes
-    // the account before Anchor evaluates the seeds constraint, so vault.owner
-    // is a trusted on-chain value, not caller-supplied.
     #[account(
         mut,
         seeds = [b"vault", vault.owner.as_ref()],
         bump = vault.bump,
     )]
     pub vault: Account<'info, Vault>,
+    #[account(
+        seeds = [b"treasury"],
+        bump = treasury.bump,
+    )]
+    pub treasury: Account<'info, Treasury>,
     pub watcher: Signer<'info>,
 }
 
 pub fn handler(ctx: Context<WitnessActivity>) -> Result<()> {
     let vault = &ctx.accounts.vault;
-    let watcher_key = ctx.accounts.watcher.key();
 
-    match vault.watcher {
-        Some(expected) => require!(watcher_key == expected, AnderdziError::UnauthorizedWatcher),
-        None => return Err(AnderdziError::WatcherNotSet.into()),
-    }
+    require!(vault.watcher_enabled, AnderdziError::WatcherNotEnabled);
+
+    let expected_watcher = ctx
+        .accounts
+        .treasury
+        .default_watcher
+        .ok_or_else(|| error!(AnderdziError::NoDefaultWatcher))?;
+
+    require!(
+        ctx.accounts.watcher.key() == expected_watcher,
+        AnderdziError::UnauthorizedWatcher
+    );
 
     ctx.accounts.vault.touch()
 }

@@ -19,4 +19,4 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "node --test --import tsx tests/e2e.ts tests/staking.ts tests/watcher.ts"
+test = "node --test --import tsx tests/treasury.ts tests/vault.ts tests/funds.ts tests/lifecycle.ts tests/beneficiaries.ts tests/staking.ts tests/watcher.ts"

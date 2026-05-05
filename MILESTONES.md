@@ -10,7 +10,7 @@ Each milestone builds on the previous one. Every milestone ends with a working, 
 
 _Goal: create and close a vault, deposit and withdraw SOL_
 
-- [x] `create_vault` instruction — initializes vault PDA with owner, watcher, inactivity period, grace period; optional initial deposit; enforces 6-month minimum inactivity period and 7-day minimum grace period
+- [x] `create_vault` instruction — initializes vault PDA with owner, `enable_watcher: bool`, inactivity period, grace period; optional initial deposit; enforces 6-month minimum inactivity period and 7-day minimum grace period
 - [x] `close_vault` instruction — owner withdraws all SOL (rent + deposits) and closes the account atomically
 - [x] `deposit` instruction — owner deposits additional SOL into an existing vault at any time
 - [x] `withdraw` instruction — owner withdraws a partial amount of SOL without closing the vault
@@ -37,12 +37,12 @@ _Goal: owner can set and update beneficiaries with percentage splits_
 _Goal: inactivity timer works via both manual ping and bot oracle_
 
 - [x] `ping` instruction — owner resets timer manually; also cancels any active trigger
-- [x] `witness_activity` instruction — trusted watcher resets timer on behalf of owner; also cancels any active trigger
-- [x] Watcher keypair stored in vault, only watcher can call `witness_activity`
-- [x] `update_watcher` instruction — owner can rotate the watcher keypair at any time
-- [x] Watcher cannot be set to the owner pubkey or the zero pubkey (enforced on create and update)
+- [x] `witness_activity` instruction — trusted watcher (resolved from Treasury.default_watcher) resets timer on behalf of owner; also cancels any active trigger
+- [x] Watcher resolved at runtime from Treasury PDA — no per-vault pubkey storage
+- [x] `opt_in_watcher` / `opt_out_watcher` instructions — owner controls whether their vault participates in automated watching
+- [x] Watcher cannot be set to the zero pubkey (enforced via `set_default_watcher`)
 - [x] `touch()` helper on `Vault` — single definition for heartbeat reset + trigger cancel
-- [x] Unit tests — 10 tests covering all heartbeat paths, watcher validation, and key rotation
+- [x] Unit tests — 10 tests covering all heartbeat paths, watcher opt-in/opt-out, and default watcher management
 
 ---
 
@@ -95,17 +95,19 @@ _Goal: deposited SOL earns yield via Marinade Finance_
 
 _Goal: optional activity watcher bot with optional Telegram notifications_
 
-- [x] Watcher field changed to `Option<Pubkey>` — watcher is now optional per vault; users who prefer manual pings can set watcher to None
-- [x] `Vault::validate_watcher()` helper — centralizes watcher validation (not zero pubkey, not owner) across `create_vault`, `update_watcher`, and `admin_rotate_watcher`
-- [x] `admin_rotate_watcher` instruction — treasury authority can rotate any vault’s watcher keypair for compromised bot recovery
+- [x] Watcher changed to `watcher_enabled: bool` — opt-in per vault; effective watcher resolved from `Treasury.default_watcher` at call time
+- [x] `set_default_watcher` instruction — treasury authority sets/rotates the protocol watcher pubkey; instantly applies to all opted-in vaults
+- [x] Protocol-managed watcher — only treasury authority can set the bot key via `set_default_watcher`; instantly rotates for all opted-in vaults
 - [x] Activity watcher bot (`bot/src/watcher.rs`) — loads assigned vaults via `getProgramAccounts` with memcmp filter; polls `getSignaturesForAddress` on each owner; verifies owner was actually a signer (prevents dust-attack spoofing); submits `witness_activity` when new activity detected; hourly poll loop; skips triggered vaults
+- [x] Automatic executor (`bot/src/executor.rs`) — permissionless; fetches all program vaults each cycle; submits `trigger` when inactivity period elapses (only after confirming no recent owner activity); submits `distribute` when grace period elapses; gracefully handles races (another party already triggered/distributed)
+- [x] Bot restructured into separate modules: `common.rs` (shared types), `executor.rs` (trigger/distribute), `watcher.rs` (activity witnessing), `notifier.rs` (Telegram), `main.rs` (orchestrator)
 - [x] Telegram notification system (optional) — users opt-in via HTTP API (`POST /register`) with ed25519 wallet signature proving vault ownership; bot sends DMs at threshold intervals (30d, 7d, 1d before trigger; on trigger; 1d before distribution; on distribution)
 - [x] PDA ownership verification — API verifies vault pubkey matches owner’s PDA derivation without RPC calls
 - [x] Notification deduplication — SQLite tracks sent notifications per vault/subscriber/type; cleared on heartbeat reset; fail-closed on DB errors (skips sending rather than spamming)
 - [x] Bounded notification ranges — only one pre-trigger notification type applies at a time (30d/7d/1d are exclusive windows, not cumulative)
 - [x] Privacy trade-off documented — if bot is compromised, attacker sees Telegram-to-vault mapping for opted-in users only
-- [x] Unit tests (`tests/watcher.ts`) — 13 tests covering null watcher creation, `WatcherNotSet` error, admin rotation, wrong watcher rejection, opt-in/opt-out, owner-as-watcher rejection
-- [ ] Multisig for treasury authority — prevents single-key compromise from rotating all watchers (deferred)
+- [x] Unit tests (`tests/watcher.ts`) — 15 tests covering ping, witness_activity (enabled/disabled vault, wrong watcher, owner-as-watcher), opt-in/opt-out, set_default_watcher (update, non-authority, clear to null, opt_in without default)
+- [ ] Multisig for treasury authority — prevents single-key compromise from rotating the default watcher (deferred)
 - [ ] Rate-limit or timelock on admin watcher rotations (deferred)
 - [ ] Dedicated RPC/indexer — public RPCs may disable `getProgramAccounts` (deferred)
 

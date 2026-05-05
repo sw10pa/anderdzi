@@ -41,7 +41,7 @@ fn verify_vault_ownership(vault_pubkey: &str, owner_pubkey: &str) -> Result<(), 
     let vault = Pubkey::from_str(vault_pubkey).map_err(|_| "Invalid vault pubkey")?;
 
     let (expected_pda, _) =
-        Pubkey::find_program_address(&[b"vault", owner.as_ref()], &crate::watcher::program_id());
+        Pubkey::find_program_address(&[b"vault", owner.as_ref()], &crate::common::program_id());
 
     if vault != expected_pda {
         return Err("Vault pubkey does not match owner's PDA".to_string());

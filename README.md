@@ -15,11 +15,11 @@ Your assets earn yield while they wait. As long as you're using Solana normally,
 ## How It Works
 
 1. **Create a vault** — set your inactivity period, designate beneficiaries with percentage splits, and optionally make an initial deposit
-2. **Update anytime** — rotate your watcher, adjust beneficiaries, deposit or withdraw SOL
+2. **Update anytime** — adjust beneficiaries, deposit or withdraw SOL, opt in/out of the watcher
 3. **Assets earn yield** — SOL is auto-staked via Marinade Finance
 4. **Anderdzi watches quietly** — monitors your on-chain activity, resets the timer automatically
 5. **If you go dark** — Telegram notifications with a direct check-in link
-6. **If the trigger fires** — grace period, final alert, then proportional distribution
+6. **If the trigger fires** — grace period, final alert, then automatic proportional distribution
 
 ---
 
@@ -34,9 +34,11 @@ anderdzi/
 │       ├── errors.rs      # Custom error codes
 │       ├── marinade.rs    # Marinade Finance CPI adapter
 │       └── instructions/  # One file per instruction
-├── bot/                   # Activity watcher + notification bot (Rust)
+├── bot/                   # Off-chain bot: executor, watcher, notifier (Rust)
 │   └── src/
-│       ├── main.rs
+│       ├── main.rs        # Orchestrator and poll loop
+│       ├── common.rs      # Shared types and helpers
+│       ├── executor.rs    # Automatic trigger & distribution
 │       ├── watcher.rs     # On-chain activity monitoring
 │       ├── notifier.rs    # Telegram notification sender
 │       ├── api.rs         # HTTP API for registration
@@ -53,7 +55,7 @@ anderdzi/
 | Layer                | Technology                            |
 | -------------------- | ------------------------------------- |
 | Smart contract       | Anchor 0.32, Rust                     |
-| Activity watcher bot | Rust, solana-client, axum, rusqlite   |
+| Bot (executor/watcher/notifier) | Rust, solana-client, axum, rusqlite   |
 | Frontend             | React, TypeScript, Vite, Tailwind CSS |
 | Wallet connection    | Solana Wallet Adapter                 |
 | Yield                | Marinade Finance                      |
@@ -89,7 +91,7 @@ anchor build
 ```bash
 anchor build
 cargo test                                          # Rust unit tests
-node --test --import tsx tests/e2e.ts tests/staking.ts tests/watcher.ts  # Integration tests
+anchor test                                         # Integration tests (LiteSVM)
 ```
 
 ### Run the bot

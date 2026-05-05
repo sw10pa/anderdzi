@@ -1,48 +1,53 @@
-import anchor from "@coral-xyz/anchor";
-import { AnchorError } from "@coral-xyz/anchor";
-import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { describe, it, before } from "node:test";
 import { assert } from "chai";
+import { PublicKey } from "@solana/web3.js";
 import {
-  provider,
-  program,
-  vaultAddress,
-  airdrop,
+  createTestEnv,
+  treasuryPDA,
+  vaultPDA,
   SIX_MONTHS,
   SEVEN_DAYS,
-} from "./helpers";
+  BN,
+  AnchorError,
+  Keypair,
+  LAMPORTS_PER_SOL,
+} from "./test-helpers";
+
+const { client, provider, program, uniquify } = createTestEnv();
 
 describe("update_beneficiaries", () => {
-  let owner: Keypair;
+  const treasury = treasuryPDA(program.programId);
+  const watcher = Keypair.generate();
+  const owner = Keypair.generate();
+  let vault: PublicKey;
 
   before(async () => {
-    owner = Keypair.generate();
-    await airdrop(owner.publicKey, 2 * LAMPORTS_PER_SOL);
-    const watcher = Keypair.generate();
-    const initialHeir = Keypair.generate().publicKey;
+    await program.methods
+      .initializeTreasury(watcher.publicKey)
+      .accounts({ authority: provider.wallet.publicKey })
+      .preInstructions(uniquify())
+      .rpc();
+
+    client.airdrop(owner.publicKey, BigInt(10 * LAMPORTS_PER_SOL));
+
     await program.methods
       .createVault(
-        watcher.publicKey,
-        new anchor.BN(SIX_MONTHS),
-        new anchor.BN(SEVEN_DAYS),
-        new anchor.BN(0),
         false,
-        [{ wallet: initialHeir, shareBps: 10000 }]
+        new BN(SIX_MONTHS),
+        new BN(SEVEN_DAYS),
+        new BN(0),
+        false,
+        [{ wallet: Keypair.generate().publicKey, shareBps: 10000 }]
       )
-      .accounts({ owner: owner.publicKey })
+      .accounts({ owner: owner.publicKey, treasury })
       .signers([owner])
+      .preInstructions(uniquify())
       .rpc();
-  });
 
-  after(async () => {
-    await program.methods
-      .closeVault()
-      .accounts({ owner: owner.publicKey })
-      .signers([owner])
-      .rpc();
+    vault = vaultPDA(program.programId, owner.publicKey);
   });
 
   it("updates the beneficiary list", async () => {
-    const vault = vaultAddress(owner.publicKey);
     const alice = Keypair.generate().publicKey;
     const bob = Keypair.generate().publicKey;
 
@@ -53,14 +58,15 @@ describe("update_beneficiaries", () => {
       ])
       .accounts({ owner: owner.publicKey })
       .signers([owner])
+      .preInstructions(uniquify())
       .rpc();
 
-    const account = await program.account.vault.fetch(vault);
-    assert.equal(account.beneficiaries.length, 2);
-    assert.ok(account.beneficiaries[0].wallet.equals(alice));
-    assert.equal(account.beneficiaries[0].shareBps, 6000);
-    assert.ok(account.beneficiaries[1].wallet.equals(bob));
-    assert.equal(account.beneficiaries[1].shareBps, 4000);
+    const acc = await program.account.vault.fetch(vault);
+    assert.equal(acc.beneficiaries.length, 2);
+    assert.ok(acc.beneficiaries[0].wallet.equals(alice));
+    assert.equal(acc.beneficiaries[0].shareBps, 6000);
+    assert.ok(acc.beneficiaries[1].wallet.equals(bob));
+    assert.equal(acc.beneficiaries[1].shareBps, 4000);
   });
 
   it("replaces the list when called again", async () => {
@@ -70,13 +76,12 @@ describe("update_beneficiaries", () => {
       .updateBeneficiaries([{ wallet: carol, shareBps: 10000 }])
       .accounts({ owner: owner.publicKey })
       .signers([owner])
+      .preInstructions(uniquify())
       .rpc();
 
-    const account = await program.account.vault.fetch(
-      vaultAddress(owner.publicKey)
-    );
-    assert.equal(account.beneficiaries.length, 1);
-    assert.ok(account.beneficiaries[0].wallet.equals(carol));
+    const acc = await program.account.vault.fetch(vault);
+    assert.equal(acc.beneficiaries.length, 1);
+    assert.ok(acc.beneficiaries[0].wallet.equals(carol));
   });
 
   it("rejects shares that do not sum to 10000 bps", async () => {
@@ -91,6 +96,7 @@ describe("update_beneficiaries", () => {
         ])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
+        .preInstructions(uniquify())
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
@@ -105,6 +111,7 @@ describe("update_beneficiaries", () => {
         .updateBeneficiaries([])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
+        .preInstructions(uniquify())
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
@@ -127,6 +134,7 @@ describe("update_beneficiaries", () => {
         .updateBeneficiaries(tooMany)
         .accounts({ owner: owner.publicKey })
         .signers([owner])
+        .preInstructions(uniquify())
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
@@ -149,6 +157,7 @@ describe("update_beneficiaries", () => {
         ])
         .accounts({ owner: owner.publicKey })
         .signers([owner])
+        .preInstructions(uniquify())
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {
@@ -162,13 +171,14 @@ describe("update_beneficiaries", () => {
 
   it("rejects a call from a non-owner", async () => {
     const stranger = Keypair.generate();
-    await airdrop(stranger.publicKey, LAMPORTS_PER_SOL);
+    client.airdrop(stranger.publicKey, BigInt(LAMPORTS_PER_SOL));
 
     try {
       await program.methods
         .updateBeneficiaries([{ wallet: stranger.publicKey, shareBps: 10000 }])
         .accounts({ owner: stranger.publicKey })
         .signers([stranger])
+        .preInstructions(uniquify())
         .rpc();
       assert.fail("expected error was not thrown");
     } catch (err) {

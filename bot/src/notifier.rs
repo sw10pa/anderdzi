@@ -1,11 +1,18 @@
-use anyhow::Result;
+//! Telegram notification system.
+//!
+//! Sends alerts to opted-in subscribers at threshold intervals before trigger,
+//! on trigger, before distribution, and on distribution.
+
 use reqwest::Client;
 use serde_json::json;
+use solana_client::rpc_client::RpcClient;
+use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
 use crate::api::AppState;
-use crate::watcher::VaultData;
+use crate::common::{self, VaultData};
 
 const DAY_SECS: i64 = 86_400;
 
@@ -64,8 +71,102 @@ fn short_key(key: &str) -> String {
     }
 }
 
+/// Sends "distributed" notifications for vaults that were just distributed.
+/// Called with the list of vault pubkeys returned by the executor before the
+/// vault accounts are gone from the chain.
+pub async fn notify_distributed(
+    db: &crate::db::Database,
+    telegram_token: &str,
+    distributed_vaults: &[Pubkey],
+) {
+    if distributed_vaults.is_empty() {
+        return;
+    }
+
+    let client = Client::new();
+    for vault_pubkey in distributed_vaults {
+        let vault_str = vault_pubkey.to_string();
+        let subscribers = match db.get_subscribers(&vault_str) {
+            Ok(subs) => subs,
+            Err(e) => {
+                warn!(vault = %vault_str, error = %e, "Failed to get subscribers for distributed vault");
+                continue;
+            }
+        };
+
+        let notification = NotificationType::Distributed;
+        for chat_id in &subscribers {
+            match db.was_notification_sent(&vault_str, *chat_id, notification.as_str()) {
+                Ok(true) => continue,
+                Ok(false) => {}
+                Err(e) => {
+                    warn!(error = %e, "Dedupe check failed, skipping notification");
+                    continue;
+                }
+            }
+
+            let message = notification.message(&vault_str);
+            match send_telegram_message(&client, telegram_token, *chat_id, &message).await {
+                Ok(_) => {
+                    if let Err(e) =
+                        db.mark_notification_sent(&vault_str, *chat_id, notification.as_str())
+                    {
+                        error!(error = %e, "Failed to mark notification as sent");
+                    }
+                    info!(
+                        vault = %vault_str,
+                        chat_id,
+                        kind = notification.as_str(),
+                        "Distributed notification sent"
+                    );
+                }
+                Err(e) => {
+                    error!(
+                        chat_id,
+                        error = %e,
+                        "Failed to send Telegram message"
+                    );
+                }
+            }
+        }
+    }
+}
+
+/// Sends notifications for all subscribed vaults.
+pub async fn notify_all(
+    client: &RpcClient,
+    state: &Arc<AppState>,
+    current_time: i64,
+    telegram_token: &str,
+) {
+    let subscribed_vaults = match state.db.get_all_subscribed_vaults() {
+        Ok(v) => v,
+        Err(e) => {
+            warn!(error = %e, "Failed to get subscribed vaults");
+            return;
+        }
+    };
+
+    for vault_pubkey_str in subscribed_vaults {
+        let vault_pubkey = match Pubkey::from_str(&vault_pubkey_str) {
+            Ok(pk) => pk,
+            Err(_) => continue,
+        };
+
+        if let Some(vault_data) = common::fetch_vault(client, &vault_pubkey) {
+            check_and_notify(
+                state,
+                &vault_pubkey_str,
+                &vault_data,
+                current_time,
+                telegram_token,
+            )
+            .await;
+        }
+    }
+}
+
 /// Check vault state and send applicable notifications.
-/// This function is called once per poll cycle per vault — no concurrent calls for the same vault.
 pub async fn check_and_notify(
     state: &Arc<AppState>,
     vault_pubkey: &str,
@@ -133,7 +234,6 @@ pub async fn check_and_notify(
 }
 
 /// Determine which notification applies based on bounded time ranges.
-/// Each notification fires in its own exclusive window to avoid stacking.
 fn determine_notifications(vault_data: &VaultData, current_time: i64) -> Vec<NotificationType> {
     let mut notifications = Vec::new();
 
@@ -152,11 +252,7 @@ fn determine_notifications(vault_data: &VaultData, current_time: i64) -> Vec<Not
         let trigger_time = vault_data.last_heartbeat + vault_data.inactivity_period;
         let time_until_trigger = trigger_time - current_time;
 
-        // Use bounded ranges so only one pre-trigger notification applies
-        if time_until_trigger <= 0 {
-            // Already past trigger time but not yet triggered on-chain
-            notifications.push(NotificationType::DaysBefore1);
-        } else if time_until_trigger <= DAY_SECS {
+        if time_until_trigger <= DAY_SECS {
             notifications.push(NotificationType::DaysBefore1);
         } else if time_until_trigger <= 7 * DAY_SECS {
             notifications.push(NotificationType::DaysBefore7);
@@ -173,7 +269,7 @@ async fn send_telegram_message(
     token: &str,
     chat_id: i64,
     text: &str,
-) -> Result<()> {
+) -> anyhow::Result<()> {
     let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
     let response = client
         .post(&url)

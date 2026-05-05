@@ -5,7 +5,7 @@ use anchor_lang::{
 
 use crate::{
     errors::AnderdziError,
-    state::{Beneficiary, Vault},
+    state::{Beneficiary, Treasury, Vault},
 };
 
 #[derive(Accounts)]
@@ -20,12 +20,17 @@ pub struct CreateVault<'info> {
     pub vault: Account<'info, Vault>,
     #[account(mut)]
     pub owner: Signer<'info>,
+    #[account(
+        seeds = [b"treasury"],
+        bump = treasury.bump,
+    )]
+    pub treasury: Account<'info, Treasury>,
     pub system_program: Program<'info, System>,
 }
 
 pub fn handler(
     ctx: Context<CreateVault>,
-    watcher: Option<Pubkey>,
+    enable_watcher: bool,
     inactivity_period: i64,
     grace_period: i64,
     deposit_amount: u64,
@@ -40,12 +45,19 @@ pub fn handler(
         grace_period >= Vault::MIN_GRACE_PERIOD,
         AnderdziError::GracePeriodTooShort
     );
-    Vault::validate_watcher(watcher, &ctx.accounts.owner.key())?;
+
+    // If user wants watcher, treasury must have a default configured
+    if enable_watcher {
+        require!(
+            ctx.accounts.treasury.default_watcher.is_some(),
+            AnderdziError::NoDefaultWatcher
+        );
+    }
 
     let vault = &mut ctx.accounts.vault;
 
     vault.owner = ctx.accounts.owner.key();
-    vault.watcher = watcher;
+    vault.watcher_enabled = enable_watcher;
     vault.inactivity_period = inactivity_period;
     vault.grace_period = grace_period;
     vault.total_deposited = 0;

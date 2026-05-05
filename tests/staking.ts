@@ -61,7 +61,7 @@ describe("staking: vault creation and guards", () => {
 
   it("initializes treasury", async () => {
     await program.methods
-      .initializeTreasury()
+      .initializeTreasury(watcher.publicKey)
       .accounts({ authority: provider.wallet.publicKey })
       .preInstructions(uniquify())
       .rpc();
@@ -70,20 +70,21 @@ describe("staking: vault creation and guards", () => {
   it("creates a vault with staking_enabled = true", async () => {
     await program.methods
       .createVault(
-        watcher.publicKey,
+        true,
         new BN(SIX_MONTHS),
         new BN(SEVEN_DAYS),
         new BN(LAMPORTS_PER_SOL),
         true,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
-      .accounts({ owner: owner.publicKey })
+      .accounts({ owner: owner.publicKey, treasury })
       .signers([owner])
       .preInstructions(uniquify())
       .rpc();
 
     const acc = await program.account.vault.fetch(vault);
     assert.isTrue(acc.stakingEnabled);
+    assert.isTrue(acc.watcherEnabled);
     assert.equal(acc.totalDeposited.toNumber(), LAMPORTS_PER_SOL);
   });
 
@@ -94,6 +95,7 @@ describe("staking: vault creation and guards", () => {
     // This tests that the vault state is correct.
     const acc = await program.account.vault.fetch(vault);
     assert.isTrue(acc.stakingEnabled);
+    assert.isTrue(acc.watcherEnabled);
     assert.equal(acc.totalDeposited.toNumber(), LAMPORTS_PER_SOL);
   });
 
@@ -105,14 +107,14 @@ describe("staking: vault creation and guards", () => {
 
     await program.methods
       .createVault(
-        watcher.publicKey,
+        true,
         new BN(SIX_MONTHS),
         new BN(SEVEN_DAYS),
         new BN(LAMPORTS_PER_SOL),
         false,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
-      .accounts({ owner: owner2.publicKey })
+      .accounts({ owner: owner2.publicKey, treasury })
       .signers([owner2])
       .preInstructions(uniquify())
       .rpc();
@@ -129,14 +131,14 @@ describe("staking: vault creation and guards", () => {
 
     await program.methods
       .createVault(
-        watcher.publicKey,
+        true,
         new BN(SIX_MONTHS),
         new BN(SEVEN_DAYS),
         new BN(0),
         false,
         [{ wallet: heir.publicKey, shareBps: 10000 }]
       )
-      .accounts({ owner: owner3.publicKey })
+      .accounts({ owner: owner3.publicKey, treasury })
       .signers([owner3])
       .preInstructions(uniquify())
       .rpc();

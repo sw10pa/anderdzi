@@ -5,10 +5,10 @@ use crate::errors::AnderdziError;
 #[account]
 pub struct Vault {
     pub owner: Pubkey,
-    pub watcher: Option<Pubkey>, // trusted bot oracle pubkey (None = no watcher)
-    pub inactivity_period: i64,  // seconds before vault triggers
-    pub last_heartbeat: i64,     // unix timestamp of last activity
-    pub grace_period: i64,       // seconds after trigger before distribution
+    pub watcher_enabled: bool, // whether this vault uses the protocol watcher bot
+    pub inactivity_period: i64, // seconds before vault triggers
+    pub last_heartbeat: i64,   // unix timestamp of last activity
+    pub grace_period: i64,     // seconds after trigger before distribution
     pub triggered_at: Option<i64>,
     pub beneficiaries: Vec<Beneficiary>,
     pub total_deposited: u64,
@@ -24,14 +24,6 @@ impl Vault {
     pub fn touch(&mut self) -> Result<()> {
         self.last_heartbeat = Clock::get()?.unix_timestamp;
         self.triggered_at = None;
-        Ok(())
-    }
-
-    pub fn validate_watcher(watcher: Option<Pubkey>, owner: &Pubkey) -> Result<()> {
-        if let Some(w) = watcher {
-            require!(w != Pubkey::default(), AnderdziError::InvalidWatcher);
-            require!(w != *owner, AnderdziError::WatcherCannotBeOwner);
-        }
         Ok(())
     }
 
@@ -61,7 +53,7 @@ impl Vault {
     pub fn space(beneficiary_count: usize) -> usize {
         8           // discriminator
         + 32        // owner
-        + 33        // watcher (Option<Pubkey>)
+        + 1         // watcher_enabled
         + 8         // inactivity_period
         + 8         // last_heartbeat
         + 8         // grace_period
@@ -76,13 +68,15 @@ impl Vault {
 #[account]
 pub struct Treasury {
     pub authority: Pubkey,
+    pub default_watcher: Option<Pubkey>, // protocol bot pubkey for activity witnessing
     pub bump: u8,
 }
 
 impl Treasury {
     pub fn space() -> usize {
-        8   // discriminator
+        8    // discriminator
         + 32 // authority
+        + 33 // default_watcher (Option<Pubkey>)
         + 1 // bump
     }
 }

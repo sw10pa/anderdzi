@@ -19,13 +19,23 @@ use state::Beneficiary;
 pub mod anderdzi {
     use super::*;
 
-    pub fn initialize_treasury(ctx: Context<InitializeTreasury>) -> Result<()> {
-        instructions::initialize_treasury::handler(ctx)
+    pub fn initialize_treasury(
+        ctx: Context<InitializeTreasury>,
+        default_watcher: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::initialize_treasury::handler(ctx, default_watcher)
+    }
+
+    pub fn set_default_watcher(
+        ctx: Context<SetDefaultWatcher>,
+        new_watcher: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::set_default_watcher::handler(ctx, new_watcher)
     }
 
     pub fn create_vault(
         ctx: Context<CreateVault>,
-        watcher: Option<Pubkey>,
+        enable_watcher: bool,
         inactivity_period: i64,
         grace_period: i64,
         deposit_amount: u64,
@@ -34,7 +44,7 @@ pub mod anderdzi {
     ) -> Result<()> {
         instructions::create_vault::handler(
             ctx,
-            watcher,
+            enable_watcher,
             inactivity_period,
             grace_period,
             deposit_amount,
@@ -59,16 +69,12 @@ pub mod anderdzi {
         instructions::witness_activity::handler(ctx)
     }
 
-    pub fn update_watcher(ctx: Context<UpdateWatcher>, new_watcher: Option<Pubkey>) -> Result<()> {
-        instructions::update_watcher::handler(ctx, new_watcher)
+    pub fn opt_in_watcher(ctx: Context<OptInWatcher>) -> Result<()> {
+        instructions::opt_in_watcher::handler(ctx)
     }
 
-    pub fn admin_rotate_watcher(
-        ctx: Context<AdminRotateWatcher>,
-        vault_owner: Pubkey,
-        new_watcher: Option<Pubkey>,
-    ) -> Result<()> {
-        instructions::admin_rotate_watcher::handler(ctx, vault_owner, new_watcher)
+    pub fn opt_out_watcher(ctx: Context<OptOutWatcher>) -> Result<()> {
+        instructions::opt_out_watcher::handler(ctx)
     }
 
     pub fn update_beneficiaries(
