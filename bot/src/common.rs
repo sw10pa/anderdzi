@@ -19,6 +19,18 @@ use tracing::warn;
 
 pub const VAULT_DISCRIMINATOR: [u8; 8] = [211, 8, 232, 43, 2, 152, 117, 119];
 
+// Marinade mainnet addresses (same as programs/anderdzi/src/marinade.rs)
+pub use solana_sdk::pubkey;
+
+pub const MARINADE_PROGRAM_ID: Pubkey = pubkey!("MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD");
+pub const MARINADE_STATE: Pubkey = pubkey!("8szGkuLTAux9XMgZ2vtY39jVSowEcpBfFfD8hXSEqdGC");
+pub const MSOL_MINT: Pubkey = pubkey!("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");
+
+// Marinade pool PDAs (derived from Marinade program)
+pub const LIQ_POOL_SOL_LEG_PDA: Pubkey = pubkey!("UefNb6z6yvArqe4cJHTXCqStRsKmWhGxnZzuHbikP5Q");
+pub const LIQ_POOL_MSOL_LEG: Pubkey = pubkey!("7GgPYjS5Dza89wV6FpZ23kUJRG5vbQ1GM25ezspYFSoE");
+pub const MARINADE_TREASURY_MSOL: Pubkey = pubkey!("B1aLzaNMeFVAyQ6f3XbbUyKcH2YPHu2fqiEagmiF23VR");
+
 /// On-chain Beneficiary layout (Borsh-deserialized).
 #[derive(BorshDeserialize, Debug, Clone)]
 #[allow(dead_code)]

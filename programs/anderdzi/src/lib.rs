@@ -33,8 +33,8 @@ pub mod anderdzi {
         instructions::set_default_watcher::handler(ctx, new_watcher)
     }
 
-    pub fn create_vault(
-        ctx: Context<CreateVault>,
+    pub fn create_vault<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateVault<'info>>,
         enable_watcher: bool,
         inactivity_period: i64,
         grace_period: i64,
@@ -53,11 +53,17 @@ pub mod anderdzi {
         )
     }
 
-    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+    pub fn deposit<'info>(
+        ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
+        amount: u64,
+    ) -> Result<()> {
         instructions::deposit::handler(ctx, amount)
     }
 
-    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+    pub fn withdraw<'info>(
+        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
+        amount: u64,
+    ) -> Result<()> {
         instructions::withdraw::handler(ctx, amount)
     }
 
@@ -84,7 +90,7 @@ pub mod anderdzi {
         instructions::update_beneficiaries::handler(ctx, beneficiaries)
     }
 
-    pub fn trigger(ctx: Context<Trigger>) -> Result<()> {
+    pub fn trigger<'info>(ctx: Context<'_, '_, '_, 'info, Trigger<'info>>) -> Result<()> {
         instructions::trigger::handler(ctx)
     }
 
@@ -102,6 +108,18 @@ pub mod anderdzi {
 
     pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {
         instructions::close_vault::handler(ctx)
+    }
+
+    pub fn enable_staking<'info>(
+        ctx: Context<'_, '_, '_, 'info, EnableStaking<'info>>,
+    ) -> Result<()> {
+        instructions::enable_staking::handler(ctx)
+    }
+
+    pub fn disable_staking<'info>(
+        ctx: Context<'_, '_, '_, 'info, DisableStaking<'info>>,
+    ) -> Result<()> {
+        instructions::disable_staking::handler(ctx)
     }
 
     pub fn stake_deposit(ctx: Context<StakeDeposit>, amount: u64) -> Result<()> {

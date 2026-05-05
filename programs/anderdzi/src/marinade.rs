@@ -139,6 +139,206 @@ pub fn sol_to_msol(lamports: u64, msol_price: u64, price_denominator: u64) -> u6
     ((lamports as u128 * price_denominator as u128) / msol_price as u128) as u64
 }
 
+use crate::errors::AnderdziError;
+
+/// Validated set of Marinade accounts for deposit (SOL -> mSOL).
+/// Parsed from remaining_accounts with strict address validation.
+pub struct MarinadeDepositAccounts<'a, 'info> {
+    pub marinade_program: &'a AccountInfo<'info>,
+    pub marinade_state: &'a AccountInfo<'info>,
+    pub msol_mint: &'a AccountInfo<'info>,
+    pub liq_pool_sol_leg_pda: &'a AccountInfo<'info>,
+    pub liq_pool_msol_leg: &'a AccountInfo<'info>,
+    pub liq_pool_msol_leg_authority: &'a AccountInfo<'info>,
+    pub reserve_pda: &'a AccountInfo<'info>,
+    pub vault_msol_ata: &'a AccountInfo<'info>,
+    pub msol_mint_authority: &'a AccountInfo<'info>,
+    pub system_program: &'a AccountInfo<'info>,
+    pub token_program: &'a AccountInfo<'info>,
+}
+
+impl<'a, 'info> MarinadeDepositAccounts<'a, 'info> {
+    /// Parse and validate deposit accounts from remaining_accounts.
+    /// Expected order: marinade_program, marinade_state, msol_mint,
+    /// liq_pool_sol_leg_pda, liq_pool_msol_leg, liq_pool_msol_leg_authority,
+    /// reserve_pda, vault_msol_ata, msol_mint_authority, system_program, token_program
+    /// Parse and validate deposit accounts. `vault_key` is used to derive and
+    /// verify the canonical mSOL ATA so callers cannot redirect minted mSOL.
+    pub fn parse(accounts: &'a [AccountInfo<'info>], vault_key: &Pubkey) -> Result<Self> {
+        if accounts.len() < 11 {
+            return Err(error!(AnderdziError::InvalidMarinadeAccounts));
+        }
+        require!(
+            accounts[0].key() == MARINADE_PROGRAM_ID,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        require!(
+            accounts[1].key() == MARINADE_STATE,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        require!(
+            accounts[2].key() == MSOL_MINT,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        // Validate vault_msol_ata is the canonical ATA for this vault
+        let expected_ata = Pubkey::find_program_address(
+            &[
+                vault_key.as_ref(),
+                anchor_spl::token::ID.as_ref(),
+                MSOL_MINT.as_ref(),
+            ],
+            &anchor_spl::associated_token::ID,
+        )
+        .0;
+        require!(
+            accounts[7].key() == expected_ata,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        Ok(Self {
+            marinade_program: &accounts[0],
+            marinade_state: &accounts[1],
+            msol_mint: &accounts[2],
+            liq_pool_sol_leg_pda: &accounts[3],
+            liq_pool_msol_leg: &accounts[4],
+            liq_pool_msol_leg_authority: &accounts[5],
+            reserve_pda: &accounts[6],
+            vault_msol_ata: &accounts[7],
+            msol_mint_authority: &accounts[8],
+            system_program: &accounts[9],
+            token_program: &accounts[10],
+        })
+    }
+
+    pub fn to_account_array(&self) -> [AccountInfo<'info>; 11] {
+        [
+            self.marinade_state.clone(),
+            self.msol_mint.clone(),
+            self.liq_pool_sol_leg_pda.clone(),
+            self.liq_pool_msol_leg.clone(),
+            self.liq_pool_msol_leg_authority.clone(),
+            self.reserve_pda.clone(),
+            // transfer_from (vault) is added by the caller
+            // but for the array layout, slot 6 is transfer_from
+            // We'll handle this differently - caller inserts vault
+            self.vault_msol_ata.clone(), // placeholder
+            self.vault_msol_ata.clone(),
+            self.msol_mint_authority.clone(),
+            self.system_program.clone(),
+            self.token_program.clone(),
+        ]
+    }
+}
+
+/// Validated set of Marinade accounts for liquid unstake (mSOL -> SOL).
+pub struct MarinadeUnstakeAccounts<'a, 'info> {
+    pub marinade_program: &'a AccountInfo<'info>,
+    pub marinade_state: &'a AccountInfo<'info>,
+    pub msol_mint: &'a AccountInfo<'info>,
+    pub liq_pool_sol_leg_pda: &'a AccountInfo<'info>,
+    pub liq_pool_msol_leg: &'a AccountInfo<'info>,
+    pub marinade_treasury_msol: &'a AccountInfo<'info>,
+    pub vault_msol_ata: &'a AccountInfo<'info>,
+    pub system_program: &'a AccountInfo<'info>,
+    pub token_program: &'a AccountInfo<'info>,
+}
+
+impl<'a, 'info> MarinadeUnstakeAccounts<'a, 'info> {
+    /// Parse and validate unstake accounts from remaining_accounts.
+    /// Expected order: marinade_program, marinade_state, msol_mint,
+    /// liq_pool_sol_leg_pda, liq_pool_msol_leg, marinade_treasury_msol,
+    /// vault_msol_ata, system_program, token_program
+    /// Parse and validate unstake accounts. `vault_key` is used to derive and
+    /// verify the canonical mSOL ATA so callers cannot supply a fake ATA.
+    pub fn parse(accounts: &'a [AccountInfo<'info>], vault_key: &Pubkey) -> Result<Self> {
+        if accounts.len() < 9 {
+            return Err(error!(AnderdziError::InvalidMarinadeAccounts));
+        }
+        require!(
+            accounts[0].key() == MARINADE_PROGRAM_ID,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        require!(
+            accounts[1].key() == MARINADE_STATE,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        require!(
+            accounts[2].key() == MSOL_MINT,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        // Validate vault_msol_ata is the canonical ATA for this vault
+        let expected_ata = Pubkey::find_program_address(
+            &[
+                vault_key.as_ref(),
+                anchor_spl::token::ID.as_ref(),
+                MSOL_MINT.as_ref(),
+            ],
+            &anchor_spl::associated_token::ID,
+        )
+        .0;
+        require!(
+            accounts[6].key() == expected_ata,
+            AnderdziError::InvalidMarinadeAccounts
+        );
+        Ok(Self {
+            marinade_program: &accounts[0],
+            marinade_state: &accounts[1],
+            msol_mint: &accounts[2],
+            liq_pool_sol_leg_pda: &accounts[3],
+            liq_pool_msol_leg: &accounts[4],
+            marinade_treasury_msol: &accounts[5],
+            vault_msol_ata: &accounts[6],
+            system_program: &accounts[7],
+            token_program: &accounts[8],
+        })
+    }
+}
+
+/// Helper: perform Marinade deposit CPI using parsed remaining_accounts.
+pub fn deposit_via_remaining<'info>(
+    accounts: &MarinadeDepositAccounts<'_, 'info>,
+    vault_info: &AccountInfo<'info>,
+    amount: u64,
+    vault_seeds: &[&[u8]],
+) -> Result<()> {
+    let accs: [AccountInfo<'info>; 11] = [
+        accounts.marinade_state.clone(),
+        accounts.msol_mint.clone(),
+        accounts.liq_pool_sol_leg_pda.clone(),
+        accounts.liq_pool_msol_leg.clone(),
+        accounts.liq_pool_msol_leg_authority.clone(),
+        accounts.reserve_pda.clone(),
+        vault_info.clone(),
+        accounts.vault_msol_ata.clone(),
+        accounts.msol_mint_authority.clone(),
+        accounts.system_program.clone(),
+        accounts.token_program.clone(),
+    ];
+    cpi_deposit(accounts.marinade_program, &accs, amount, vault_seeds)
+}
+
+/// Helper: perform Marinade liquid unstake CPI using parsed remaining_accounts.
+pub fn unstake_via_remaining<'info>(
+    accounts: &MarinadeUnstakeAccounts<'_, 'info>,
+    vault_info: &AccountInfo<'info>,
+    destination_info: &AccountInfo<'info>,
+    msol_amount: u64,
+    vault_seeds: &[&[u8]],
+) -> Result<()> {
+    let accs: [AccountInfo<'info>; 10] = [
+        accounts.marinade_state.clone(),
+        accounts.msol_mint.clone(),
+        accounts.liq_pool_sol_leg_pda.clone(),
+        accounts.liq_pool_msol_leg.clone(),
+        accounts.marinade_treasury_msol.clone(),
+        accounts.vault_msol_ata.clone(),
+        vault_info.clone(),
+        destination_info.clone(),
+        accounts.system_program.clone(),
+        accounts.token_program.clone(),
+    ];
+    cpi_liquid_unstake(accounts.marinade_program, &accs, msol_amount, vault_seeds)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

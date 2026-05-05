@@ -76,12 +76,6 @@ fn execute_vault(
     vault_data: &VaultData,
     current_time: i64,
 ) -> Result<ExecutorAction> {
-    // Skip staking vaults — their SOL is in mSOL and requires manual unstake
-    if vault_data.staking_enabled {
-        info!(vault = %vault_pda, "Skipping staking vault — manual unstake required before distribution");
-        return Ok(ExecutorAction::None);
-    }
-
     // Vault is triggered — attempt distribution if grace period elapsed
     if let Some(triggered_at) = vault_data.triggered_at {
         if current_time >= triggered_at + vault_data.grace_period {
@@ -98,7 +92,7 @@ fn execute_vault(
 
     // Inactivity period elapsed — attempt trigger
     if current_time >= vault_data.last_heartbeat + vault_data.inactivity_period {
-        match submit_trigger(client, payer, program_id, vault_pda) {
+        match submit_trigger(client, payer, program_id, vault_pda, vault_data) {
             Ok(_) => return Ok(ExecutorAction::Triggered),
             Err(e) => {
                 warn!(vault = %vault_pda, error = %e, "trigger failed (may already be triggered)");
@@ -115,15 +109,37 @@ fn submit_trigger(
     payer: &Keypair,
     program_id: &Pubkey,
     vault_pda: &Pubkey,
+    vault_data: &VaultData,
 ) -> Result<()> {
+    let mut accounts = vec![AccountMeta::new(*vault_pda, false)];
+
+    // If staking is enabled, append Marinade unstake accounts as remaining_accounts
+    if vault_data.staking_enabled {
+        let vault_msol_ata = spl_associated_token_account::get_associated_token_address(
+            vault_pda,
+            &common::MSOL_MINT,
+        );
+        accounts.extend_from_slice(&[
+            AccountMeta::new_readonly(common::MARINADE_PROGRAM_ID, false),
+            AccountMeta::new(common::MARINADE_STATE, false),
+            AccountMeta::new(common::MSOL_MINT, false),
+            AccountMeta::new(common::LIQ_POOL_SOL_LEG_PDA, false),
+            AccountMeta::new(common::LIQ_POOL_MSOL_LEG, false),
+            AccountMeta::new(common::MARINADE_TREASURY_MSOL, false),
+            AccountMeta::new(vault_msol_ata, false),
+            AccountMeta::new_readonly(solana_sdk::system_program::id(), false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ]);
+    }
+
     let instruction = Instruction {
         program_id: *program_id,
-        accounts: vec![AccountMeta::new(*vault_pda, false)],
+        accounts,
         data: common::anchor_discriminator("trigger").to_vec(),
     };
 
     common::send_tx(client, payer, instruction)?;
-    info!(vault = %vault_pda, "trigger tx confirmed");
+    info!(vault = %vault_pda, staking = vault_data.staking_enabled, "trigger tx confirmed");
     Ok(())
 }
 

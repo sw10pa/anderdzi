@@ -76,4 +76,19 @@ pub enum AnderdziError {
 
     #[msg("Watcher cannot be the same as the vault owner")]
     WatcherCannotBeOwner,
+
+    #[msg("Staking is already enabled for this vault")]
+    StakingAlreadyEnabled,
+
+    #[msg("Staking is already disabled for this vault")]
+    StakingAlreadyDisabled,
+
+    #[msg("Staking must be disabled before distribution (trigger should have done this)")]
+    StakingMustBeDisabled,
+
+    #[msg("Invalid or missing Marinade accounts in remaining_accounts")]
+    InvalidMarinadeAccounts,
+
+    #[msg("Cannot close vault while staking is enabled — disable staking first")]
+    StakingStillEnabled,
 }

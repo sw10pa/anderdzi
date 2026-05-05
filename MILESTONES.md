@@ -76,19 +76,27 @@ _Goal: assets distribute proportionally to beneficiaries after grace period_
 
 _Goal: deposited SOL earns yield via Marinade Finance_
 
-- [x] `stake_deposit` instruction — owner deposits SOL which is auto-staked via Marinade CPI; vault receives mSOL
-- [x] `unstake_withdraw` instruction — liquid-unstakes proportional mSOL and returns SOL to owner
-- [x] `harvest_yield` instruction — permissionless; transfers 50% of accrued yield (mSOL) to protocol treasury
 - [x] Marinade CPI adapter (`marinade.rs`) — manual `invoke_signed` (no external crate dependency); exchange rate math with u128 overflow protection
-- [x] Vault `staking_enabled` flag — opt-in per vault at creation; plain `withdraw` blocked when staking enabled
-- [x] Address constraints on all Marinade accounts (program, state, mSOL mint)
+- [x] `MarinadeDepositAccounts` / `MarinadeUnstakeAccounts` helpers — parse and validate Marinade accounts from `remaining_accounts`; derive and verify canonical vault mSOL ATA on-chain in every call (prevents mSOL redirection attacks)
+- [x] `harvest_yield` instruction — permissionless; transfers 50% of accrued yield (mSOL) to protocol treasury
+- [x] `stake_deposit` / `unstake_withdraw` instructions — kept as manual recovery paths
+- [x] Vault `staking_enabled` flag — opt-in per vault at creation or via `enable_staking`
+- [x] **Transparent staking** — all fund operations auto-stake/unstake as needed:
+  - [x] `create_vault` supports `staking_enabled=true` — creates mSOL ATA (idempotent) and stakes initial deposit via `remaining_accounts`
+  - [x] `enable_staking` instruction — owner enables staking on existing vault; creates mSOL ATA via `init_if_needed`; stakes all current SOL
+  - [x] `disable_staking` instruction — owner disables staking; unstakes all mSOL back to vault PDA; recomputes `total_deposited` from actual balance
+  - [x] `deposit` auto-stakes deposited SOL when `staking_enabled` via `remaining_accounts`
+  - [x] `withdraw` auto-unstakes proportional mSOL when `staking_enabled` via `remaining_accounts`
+  - [x] `trigger` auto-unstakes all mSOL, updates `total_deposited` to include yield, sets `staking_enabled = false`
+  - [x] `distribute` requires `staking_enabled = false` (trigger handles unstaking)
+  - [x] `close_vault` requires `staking_enabled = false` (owner must call `disable_staking` first)
+- [x] Address constraints on all Marinade accounts (program, state, mSOL mint, vault ATA)
 - [x] Treasury mSOL ATA bound to treasury PDA authority (prevents spoofing)
 - [x] Marinade state price sanity check (1–10 SOL/mSOL range)
-- [x] `close_vault` blocked when staking enabled — owner must unstake all mSOL first
+- [x] Bot executor handles staking vaults — passes Marinade `remaining_accounts` when triggering staked vaults
 - [x] Unit tests — 8 Rust tests for yield math, overflow, edge cases
-- [x] Integration tests (`tests/staking.ts`) — 9 tests covering vault creation with staking, guards, close_vault rejection, off-chain yield math
+- [x] Integration tests (`tests/staking.ts`) — 8 tests covering vault creation flags, staking guards, off-chain yield math
 - [ ] Full CPI integration test with mainnet-forked localnet (requires Marinade program deployed; deferred)
-
 ---
 
 ## Milestone 7 — Bot ✅

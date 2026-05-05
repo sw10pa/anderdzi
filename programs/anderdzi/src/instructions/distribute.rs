@@ -42,6 +42,11 @@ pub fn handler(ctx: Context<Distribute>) -> Result<()> {
         AnderdziError::GracePeriodActive
     );
 
+    require!(
+        !ctx.accounts.vault.staking_enabled,
+        AnderdziError::StakingMustBeDisabled
+    );
+
     let beneficiaries = ctx.accounts.vault.beneficiaries.clone();
 
     require!(

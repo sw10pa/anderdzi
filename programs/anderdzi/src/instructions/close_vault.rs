@@ -9,7 +9,7 @@ pub struct CloseVault<'info> {
         seeds = [b"vault", owner.key().as_ref()],
         bump = vault.bump,
         has_one = owner @ AnderdziError::Unauthorized,
-        constraint = !vault.staking_enabled @ AnderdziError::UseUnstakeWithdraw,
+        constraint = !vault.staking_enabled @ AnderdziError::StakingStillEnabled,
         close = owner,
     )]
     pub vault: Account<'info, Vault>,

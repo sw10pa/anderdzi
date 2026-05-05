@@ -16,7 +16,7 @@ Your assets earn yield while they wait. As long as you're using Solana normally,
 
 1. **Create a vault** — set your inactivity period, designate beneficiaries with percentage splits, and optionally make an initial deposit
 2. **Update anytime** — adjust beneficiaries, deposit or withdraw SOL, opt in/out of the watcher
-3. **Assets earn yield** — SOL is auto-staked via Marinade Finance
+3. **Assets earn yield** — opt-in staking via Marinade Finance (enable/disable anytime)
 4. **Anderdzi watches quietly** — monitors your on-chain activity, resets the timer automatically
 5. **If you go dark** — Telegram notifications with a direct check-in link
 6. **If the trigger fires** — grace period, final alert, then automatic proportional distribution

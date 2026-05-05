@@ -3,7 +3,7 @@ use anchor_lang::{
     system_program::{transfer, Transfer},
 };
 
-use crate::{errors::AnderdziError, state::Vault};
+use crate::{errors::AnderdziError, marinade, state::Vault};
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
@@ -17,11 +17,13 @@ pub struct Deposit<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     pub system_program: Program<'info, System>,
+    // remaining_accounts: Marinade deposit accounts (11) when staking is enabled
 }
 
-pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, Deposit<'info>>, amount: u64) -> Result<()> {
     require!(amount > 0, AnderdziError::ZeroAmount);
 
+    // Transfer SOL from owner to vault PDA
     transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
@@ -33,12 +35,29 @@ pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         amount,
     )?;
 
+    let vault_key = ctx.accounts.vault.key();
     let vault = &mut ctx.accounts.vault;
     vault.total_deposited = vault
         .total_deposited
         .checked_add(amount)
         .ok_or(AnderdziError::InsufficientFunds)?;
-    vault.touch()?;
 
+    // Auto-stake if staking is enabled
+    if vault.staking_enabled {
+        let marinade_accounts =
+            marinade::MarinadeDepositAccounts::parse(ctx.remaining_accounts, &vault_key)?;
+
+        let owner_key = ctx.accounts.owner.key();
+        let vault_seeds: &[&[u8]] = &[b"vault", owner_key.as_ref(), &[vault.bump]];
+
+        marinade::deposit_via_remaining(
+            &marinade_accounts,
+            &vault.to_account_info(),
+            amount,
+            vault_seeds,
+        )?;
+    }
+
+    vault.touch()?;
     Ok(())
 }
