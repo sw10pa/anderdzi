@@ -113,10 +113,15 @@ fn submit_trigger(
 ) -> Result<()> {
     let mut accounts = vec![AccountMeta::new(*vault_pda, false)];
 
-    // If staking is enabled, append Marinade unstake accounts as remaining_accounts
+    // If staking is enabled, append Marinade unstake accounts + treasury_msol_ata as remaining_accounts
     if vault_data.staking_enabled {
         let vault_msol_ata = spl_associated_token_account::get_associated_token_address(
             vault_pda,
+            &common::MSOL_MINT,
+        );
+        let (treasury_pda, _) = common::treasury_pda(program_id);
+        let treasury_msol_ata = spl_associated_token_account::get_associated_token_address(
+            &treasury_pda,
             &common::MSOL_MINT,
         );
         accounts.extend_from_slice(&[
@@ -129,6 +134,7 @@ fn submit_trigger(
             AccountMeta::new(vault_msol_ata, false),
             AccountMeta::new_readonly(solana_sdk::system_program::id(), false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new(treasury_msol_ata, false), // [9] for auto-harvest
         ]);
     }
 

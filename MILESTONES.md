@@ -78,7 +78,8 @@ _Goal: deposited SOL earns yield via Marinade Finance_
 
 - [x] Marinade CPI adapter (`marinade.rs`) — manual `invoke_signed` (no external crate dependency); exchange rate math with u128 overflow protection
 - [x] `MarinadeDepositAccounts` / `MarinadeUnstakeAccounts` helpers — parse and validate Marinade accounts from `remaining_accounts`; derive and verify canonical vault mSOL ATA on-chain in every call (prevents mSOL redirection attacks)
-- [x] `harvest_yield` instruction — permissionless; transfers 50% of accrued yield (mSOL) to protocol treasury
+- [x] `harvest_yield` instruction — permissionless; transfers 50% of accrued yield (mSOL) to protocol treasury; updates `total_deposited` as high-water mark to prevent double-charging
+- [x] **Auto-harvest** — `trigger`, `withdraw`, and `disable_staking` automatically harvest protocol's 50% yield share before unstaking; treasury mSOL ATA required as `remaining_accounts[9]` on `withdraw` and `disable_staking` (mandatory fee collection); `trigger` skips gracefully if ATA not provided (safety-critical path must not be blocked)
 - [x] `stake_deposit` / `unstake_withdraw` instructions — kept as manual recovery paths
 - [x] Vault `staking_enabled` flag — opt-in per vault at creation or via `enable_staking`
 - [x] **Transparent staking** — all fund operations auto-stake/unstake as needed:

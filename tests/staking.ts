@@ -187,3 +187,88 @@ describe("staking: yield math verification (off-chain)", () => {
     assert.equal(grossYield, 0);
   });
 });
+
+describe("staking: auto-harvest and high-water mark (off-chain)", () => {
+  it("high-water mark prevents double-harvest", () => {
+    // User deposits 100 SOL, mSOL appreciates to 108 SOL value
+    let totalDeposited = 100_000_000_000;
+    const msolBalance = 100_000_000_000; // 100 mSOL
+    const rate = 1.08; // mSOL/SOL rate
+
+    // First harvest
+    const currentSolValue = Math.floor(msolBalance * rate); // 108 SOL
+    const principalMsol = Math.floor(totalDeposited / rate); // ~92.59 mSOL
+    const yieldMsol = msolBalance - principalMsol; // ~7.41 mSOL
+    const protocolShare = Math.floor(yieldMsol / 2);
+    const userShare = yieldMsol - protocolShare;
+
+    assert.ok(protocolShare > 0, "protocol should get yield");
+
+    // After harvest: update total_deposited (high-water mark)
+    const userShareSol = Math.floor(userShare * rate);
+    totalDeposited += userShareSol;
+
+    // mSOL balance after protocol share removed
+    const msolAfterHarvest = msolBalance - protocolShare;
+
+    // Second harvest attempt: should find zero yield
+    const principalMsol2 = Math.floor(totalDeposited / rate);
+    const yieldMsol2 = msolAfterHarvest - principalMsol2;
+
+    // Yield should be zero or negligible (rounding)
+    assert.ok(
+      yieldMsol2 <= 1,
+      `second harvest yield should be ~0, got ${yieldMsol2}`
+    );
+  });
+
+  it("proportional withdraw with yield uses adjusted total_deposited", () => {
+    // 100 SOL deposited, mSOL worth 108 SOL (8 SOL yield)
+    let totalDeposited = 100_000_000_000;
+    const rate = 1.08;
+    const msolBalance = 100_000_000_000; // 100 mSOL
+
+    // Auto-harvest: protocol gets 50% of yield
+    const principalMsol = Math.floor(totalDeposited / rate);
+    const yieldMsol = msolBalance - principalMsol;
+    const protocolShare = Math.floor(yieldMsol / 2);
+    const userShareMsol = yieldMsol - protocolShare;
+    const userShareSol = Math.floor(userShareMsol * rate);
+    const msolAfterHarvest = msolBalance - protocolShare;
+
+    // Adjust total_deposited with user's yield
+    const adjustedDeposited = totalDeposited + userShareSol;
+
+    // User withdraws 50 SOL
+    const withdrawAmount = 50_000_000_000;
+    const msolToUnstake = Math.floor(
+      Number(BigInt(withdrawAmount) * BigInt(msolAfterHarvest)) /
+        Number(BigInt(adjustedDeposited))
+    );
+
+    // After withdraw
+    const newTotalDeposited = adjustedDeposited - withdrawAmount;
+    const remainingMsol = msolAfterHarvest - msolToUnstake;
+
+    // Remaining mSOL value should roughly equal newTotalDeposited
+    const remainingValue = Math.floor(remainingMsol * rate);
+    const drift = Math.abs(remainingValue - newTotalDeposited);
+
+    // Should be within 1 SOL of each other (rounding)
+    assert.ok(
+      drift < 1_000_000_000,
+      `remaining value ${remainingValue} should be close to total_deposited ${newTotalDeposited}, drift=${drift}`
+    );
+  });
+
+  it("auto-harvest is no-op when no yield exists", () => {
+    // Rate is exactly 1:1, no yield
+    const totalDeposited = 100_000_000_000;
+    const msolBalance = 100_000_000_000;
+    const rate = 1.0;
+
+    const principalMsol = Math.floor(totalDeposited / rate);
+    const yieldMsol = Math.max(0, msolBalance - principalMsol);
+    assert.equal(yieldMsol, 0);
+  });
+});

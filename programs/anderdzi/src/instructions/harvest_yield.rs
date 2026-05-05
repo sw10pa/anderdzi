@@ -53,7 +53,7 @@ pub fn handler(ctx: Context<HarvestYield>) -> Result<()> {
     );
 
     let marinade_data = ctx.accounts.marinade_state.try_borrow_data()?;
-    let (msol_price, price_denominator) = parse_msol_price(&marinade_data)?;
+    let (msol_price, price_denominator) = marinade::parse_msol_price(&marinade_data)?;
     drop(marinade_data);
 
     let msol_balance = ctx.accounts.vault_msol_ata.amount;
@@ -67,6 +67,8 @@ pub fn handler(ctx: Context<HarvestYield>) -> Result<()> {
 
     let protocol_share_msol = yield_msol / 2;
     require!(protocol_share_msol > 0, AnderdziError::NoYieldAvailable);
+
+    let user_share_msol = yield_msol - protocol_share_msol;
 
     let owner_key = ctx.accounts.vault.owner;
     let vault_bump = ctx.accounts.vault.bump;
@@ -85,34 +87,13 @@ pub fn handler(ctx: Context<HarvestYield>) -> Result<()> {
         protocol_share_msol,
     )?;
 
+    // Update total_deposited to include user's yield share (prevents double-harvest)
+    let user_share_sol = marinade::msol_to_sol(user_share_msol, msol_price, price_denominator);
+    let vault = &mut ctx.accounts.vault;
+    vault.total_deposited = vault
+        .total_deposited
+        .checked_add(user_share_sol)
+        .ok_or(AnderdziError::InsufficientFunds)?;
+
     Ok(())
-}
-
-/// Read mSOL price from Marinade State account.
-/// Returns (msol_price_fp32, PRICE_DENOMINATOR) where:
-///   SOL value = msol_amount * msol_price_fp32 / PRICE_DENOMINATOR
-///
-/// Uses Marinade's stored msol_price field (u64, fixed-point with denominator 2^32).
-/// Pinned to the current deployed Marinade program layout (anchor 0.27).
-fn parse_msol_price(data: &[u8]) -> Result<(u64, u64)> {
-    const PRICE_DENOMINATOR: u64 = 0x1_0000_0000; // 2^32
-    const MSOL_PRICE_OFFSET: usize = 648;
-    const MIN_ACCOUNT_SIZE: usize = MSOL_PRICE_OFFSET + 8;
-
-    if data.len() < MIN_ACCOUNT_SIZE {
-        return Err(error!(AnderdziError::InvalidMarinadeState));
-    }
-
-    let msol_price = u64::from_le_bytes(
-        data[MSOL_PRICE_OFFSET..MSOL_PRICE_OFFSET + 8]
-            .try_into()
-            .map_err(|_| error!(AnderdziError::InvalidMarinadeState))?,
-    );
-
-    // Sanity: mSOL should be worth >= 1 SOL and < 10 SOL
-    if !(PRICE_DENOMINATOR..=PRICE_DENOMINATOR * 10).contains(&msol_price) {
-        return Err(error!(AnderdziError::InvalidMarinadeState));
-    }
-
-    Ok((msol_price, PRICE_DENOMINATOR))
 }

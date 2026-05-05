@@ -339,6 +339,99 @@ pub fn unstake_via_remaining<'info>(
     cpi_liquid_unstake(accounts.marinade_program, &accs, msol_amount, vault_seeds)
 }
 
+/// Read mSOL price from Marinade State account data.
+/// Returns (msol_price_fp32, PRICE_DENOMINATOR).
+pub fn parse_msol_price(data: &[u8]) -> Result<(u64, u64)> {
+    const PRICE_DENOMINATOR: u64 = 0x1_0000_0000; // 2^32
+    const MSOL_PRICE_OFFSET: usize = 648;
+    const MIN_ACCOUNT_SIZE: usize = MSOL_PRICE_OFFSET + 8;
+
+    if data.len() < MIN_ACCOUNT_SIZE {
+        return Err(error!(AnderdziError::InvalidMarinadeState));
+    }
+
+    let msol_price = u64::from_le_bytes(
+        data[MSOL_PRICE_OFFSET..MSOL_PRICE_OFFSET + 8]
+            .try_into()
+            .map_err(|_| error!(AnderdziError::InvalidMarinadeState))?,
+    );
+
+    if !(PRICE_DENOMINATOR..=PRICE_DENOMINATOR * 10).contains(&msol_price) {
+        return Err(error!(AnderdziError::InvalidMarinadeState));
+    }
+
+    Ok((msol_price, PRICE_DENOMINATOR))
+}
+
+/// Auto-harvest protocol's 50% of accrued mSOL yield before unstaking.
+/// Returns the user's yield share in SOL terms (for caller to adjust total_deposited).
+/// Returns 0 if no yield or if harvest is skipped.
+pub fn auto_harvest_yield<'info>(
+    vault_msol_ata: &AccountInfo<'info>,
+    treasury_msol_ata: &AccountInfo<'info>,
+    marinade_state: &AccountInfo<'info>,
+    token_program: &AccountInfo<'info>,
+    vault_info: &AccountInfo<'info>,
+    total_deposited: u64,
+    vault_seeds: &[&[u8]],
+) -> Result<u64> {
+    // Validate treasury_msol_ata is the canonical ATA for the treasury PDA
+    let treasury_pda = Pubkey::find_program_address(&[b"treasury"], &crate::ID).0;
+    let expected_ata = Pubkey::find_program_address(
+        &[
+            treasury_pda.as_ref(),
+            anchor_spl::token::ID.as_ref(),
+            MSOL_MINT.as_ref(),
+        ],
+        &anchor_spl::associated_token::ID,
+    )
+    .0;
+    require!(
+        treasury_msol_ata.key() == expected_ata,
+        AnderdziError::InvalidMarinadeAccounts
+    );
+
+    // Read mSOL price
+    let marinade_data = marinade_state.try_borrow_data()?;
+    let (msol_price, price_denominator) = parse_msol_price(&marinade_data)?;
+    drop(marinade_data);
+
+    // Read mSOL balance from raw account data
+    let msol_data = vault_msol_ata.try_borrow_data()?;
+    let msol_balance = u64::from_le_bytes(msol_data[64..72].try_into().unwrap());
+    drop(msol_data);
+
+    // Calculate yield
+    let principal_msol = sol_to_msol(total_deposited, msol_price, price_denominator);
+    let yield_msol = msol_balance.saturating_sub(principal_msol);
+    if yield_msol == 0 {
+        return Ok(0);
+    }
+
+    let protocol_share_msol = yield_msol / 2;
+    let user_share_msol = yield_msol - protocol_share_msol;
+
+    if protocol_share_msol > 0 {
+        // SPL token transfer: vault_msol_ata -> treasury_msol_ata
+        anchor_spl::token::transfer(
+            anchor_lang::context::CpiContext::new_with_signer(
+                token_program.clone(),
+                anchor_spl::token::Transfer {
+                    from: vault_msol_ata.clone(),
+                    to: treasury_msol_ata.clone(),
+                    authority: vault_info.clone(),
+                },
+                &[vault_seeds],
+            ),
+            protocol_share_msol,
+        )?;
+    }
+
+    // Return user's yield share in SOL terms
+    let user_share_sol = msol_to_sol(user_share_msol, msol_price, price_denominator);
+    Ok(user_share_sol)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
