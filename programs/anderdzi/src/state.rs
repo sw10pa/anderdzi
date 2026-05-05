@@ -5,10 +5,10 @@ use crate::errors::AnderdziError;
 #[account]
 pub struct Vault {
     pub owner: Pubkey,
-    pub watcher: Pubkey,        // trusted bot oracle pubkey
-    pub inactivity_period: i64, // seconds before vault triggers
-    pub last_heartbeat: i64,    // unix timestamp of last activity
-    pub grace_period: i64,      // seconds after trigger before distribution
+    pub watcher: Option<Pubkey>, // trusted bot oracle pubkey (None = no watcher)
+    pub inactivity_period: i64,  // seconds before vault triggers
+    pub last_heartbeat: i64,     // unix timestamp of last activity
+    pub grace_period: i64,       // seconds after trigger before distribution
     pub triggered_at: Option<i64>,
     pub beneficiaries: Vec<Beneficiary>,
     pub total_deposited: u64,
@@ -24,6 +24,14 @@ impl Vault {
     pub fn touch(&mut self) -> Result<()> {
         self.last_heartbeat = Clock::get()?.unix_timestamp;
         self.triggered_at = None;
+        Ok(())
+    }
+
+    pub fn validate_watcher(watcher: Option<Pubkey>, owner: &Pubkey) -> Result<()> {
+        if let Some(w) = watcher {
+            require!(w != Pubkey::default(), AnderdziError::InvalidWatcher);
+            require!(w != *owner, AnderdziError::WatcherCannotBeOwner);
+        }
         Ok(())
     }
 
@@ -53,7 +61,7 @@ impl Vault {
     pub fn space(beneficiary_count: usize) -> usize {
         8           // discriminator
         + 32        // owner
-        + 32        // watcher
+        + 33        // watcher (Option<Pubkey>)
         + 8         // inactivity_period
         + 8         // last_heartbeat
         + 8         // grace_period

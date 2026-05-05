@@ -25,7 +25,7 @@ pub mod anderdzi {
 
     pub fn create_vault(
         ctx: Context<CreateVault>,
-        watcher: Pubkey,
+        watcher: Option<Pubkey>,
         inactivity_period: i64,
         grace_period: i64,
         deposit_amount: u64,
@@ -59,8 +59,16 @@ pub mod anderdzi {
         instructions::witness_activity::handler(ctx)
     }
 
-    pub fn update_watcher(ctx: Context<UpdateWatcher>, new_watcher: Pubkey) -> Result<()> {
+    pub fn update_watcher(ctx: Context<UpdateWatcher>, new_watcher: Option<Pubkey>) -> Result<()> {
         instructions::update_watcher::handler(ctx, new_watcher)
+    }
+
+    pub fn admin_rotate_watcher(
+        ctx: Context<AdminRotateWatcher>,
+        vault_owner: Pubkey,
+        new_watcher: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::admin_rotate_watcher::handler(ctx, vault_owner, new_watcher)
     }
 
     pub fn update_beneficiaries(

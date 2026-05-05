@@ -1,17 +1,193 @@
 use anyhow::Result;
-use teloxide::prelude::*;
-use tracing::info;
+use reqwest::Client;
+use serde_json::json;
+use std::sync::Arc;
+use tracing::{error, info, warn};
 
-/// Monitors vault states and sends Telegram notifications
-/// when inactivity thresholds are approaching or triggered.
-pub async fn run(_bot: Bot) -> Result<()> {
-    info!("Notifier started");
+use crate::api::AppState;
+use crate::watcher::VaultData;
 
-    // TODO: load vault states from on-chain
-    // TODO: for each vault approaching threshold, send Telegram notification
-    // TODO: include deep link back to dApp for check-in
+const DAY_SECS: i64 = 86_400;
 
-    loop {
-        tokio::time::sleep(tokio::time::Duration::from_secs(3600)).await;
+#[derive(Debug, Clone, Copy)]
+pub enum NotificationType {
+    DaysBefore30,
+    DaysBefore7,
+    DaysBefore1,
+    Triggered,
+    DaysBeforeDistribution1,
+    Distributed,
+}
+
+impl NotificationType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::DaysBefore30 => "30d_before_trigger",
+            Self::DaysBefore7 => "7d_before_trigger",
+            Self::DaysBefore1 => "1d_before_trigger",
+            Self::Triggered => "triggered",
+            Self::DaysBeforeDistribution1 => "1d_before_distribution",
+            Self::Distributed => "distributed",
+        }
     }
+
+    fn message(&self, vault_pubkey: &str) -> String {
+        let key = short_key(vault_pubkey);
+        match self {
+            Self::DaysBefore30 => format!(
+                "\u{26a0}\u{fe0f} Vault {} will trigger in ~30 days if no activity is detected. Consider signing a transaction.", key
+            ),
+            Self::DaysBefore7 => format!(
+                "\u{1f6a8} Vault {} will trigger in ~7 days! Please sign a transaction to reset the countdown.", key
+            ),
+            Self::DaysBefore1 => format!(
+                "\u{2757} URGENT: Vault {} triggers TOMORROW if no activity is detected!", key
+            ),
+            Self::Triggered => format!(
+                "\u{1f534} Vault {} has been TRIGGERED. Grace period has started.", key
+            ),
+            Self::DaysBeforeDistribution1 => format!(
+                "\u{23f0} Vault {} grace period ends TOMORROW. Distribution will become available.", key
+            ),
+            Self::Distributed => format!(
+                "\u{2705} Vault {} has been distributed. Funds have been sent to beneficiaries.", key
+            ),
+        }
+    }
+}
+
+fn short_key(key: &str) -> String {
+    if key.len() > 8 {
+        format!("{}...{}", &key[..4], &key[key.len() - 4..])
+    } else {
+        key.to_string()
+    }
+}
+
+/// Check vault state and send applicable notifications.
+/// This function is called once per poll cycle per vault — no concurrent calls for the same vault.
+pub async fn check_and_notify(
+    state: &Arc<AppState>,
+    vault_pubkey: &str,
+    vault_data: &VaultData,
+    current_time: i64,
+    telegram_token: &str,
+) {
+    let subscribers = match state.db.get_subscribers(vault_pubkey) {
+        Ok(subs) => subs,
+        Err(e) => {
+            warn!(vault = %vault_pubkey, error = %e, "Failed to get subscribers");
+            return;
+        }
+    };
+
+    if subscribers.is_empty() {
+        return;
+    }
+
+    let notifications = determine_notifications(vault_data, current_time);
+
+    let client = Client::new();
+    for notification_type in notifications {
+        for &chat_id in &subscribers {
+            // Fail-closed: if dedupe check errors, skip sending (don't spam)
+            match state
+                .db
+                .was_notification_sent(vault_pubkey, chat_id, notification_type.as_str())
+            {
+                Ok(true) => continue,
+                Ok(false) => {}
+                Err(e) => {
+                    warn!(error = %e, "Dedupe check failed, skipping notification");
+                    continue;
+                }
+            }
+
+            let message = notification_type.message(vault_pubkey);
+            match send_telegram_message(&client, telegram_token, chat_id, &message).await {
+                Ok(_) => {
+                    if let Err(e) = state.db.mark_notification_sent(
+                        vault_pubkey,
+                        chat_id,
+                        notification_type.as_str(),
+                    ) {
+                        error!(error = %e, "Failed to mark notification as sent");
+                    }
+                    info!(
+                        vault = %vault_pubkey,
+                        chat_id,
+                        kind = notification_type.as_str(),
+                        "Notification sent"
+                    );
+                }
+                Err(e) => {
+                    error!(
+                        chat_id,
+                        error = %e,
+                        "Failed to send Telegram message"
+                    );
+                }
+            }
+        }
+    }
+}
+
+/// Determine which notification applies based on bounded time ranges.
+/// Each notification fires in its own exclusive window to avoid stacking.
+fn determine_notifications(vault_data: &VaultData, current_time: i64) -> Vec<NotificationType> {
+    let mut notifications = Vec::new();
+
+    if let Some(triggered_at) = vault_data.triggered_at {
+        let distribution_time = triggered_at + vault_data.grace_period;
+        let time_until_distribution = distribution_time - current_time;
+
+        if current_time >= distribution_time {
+            notifications.push(NotificationType::Distributed);
+        } else if time_until_distribution <= DAY_SECS {
+            notifications.push(NotificationType::DaysBeforeDistribution1);
+        }
+        // Always notify about trigger state
+        notifications.push(NotificationType::Triggered);
+    } else {
+        let trigger_time = vault_data.last_heartbeat + vault_data.inactivity_period;
+        let time_until_trigger = trigger_time - current_time;
+
+        // Use bounded ranges so only one pre-trigger notification applies
+        if time_until_trigger <= 0 {
+            // Already past trigger time but not yet triggered on-chain
+            notifications.push(NotificationType::DaysBefore1);
+        } else if time_until_trigger <= DAY_SECS {
+            notifications.push(NotificationType::DaysBefore1);
+        } else if time_until_trigger <= 7 * DAY_SECS {
+            notifications.push(NotificationType::DaysBefore7);
+        } else if time_until_trigger <= 30 * DAY_SECS {
+            notifications.push(NotificationType::DaysBefore30);
+        }
+    }
+
+    notifications
+}
+
+async fn send_telegram_message(
+    client: &Client,
+    token: &str,
+    chat_id: i64,
+    text: &str,
+) -> Result<()> {
+    let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
+    let response = client
+        .post(&url)
+        .json(&json!({
+            "chat_id": chat_id,
+            "text": text
+        }))
+        .send()
+        .await?;
+
+    if !response.status().is_success() {
+        let body = response.text().await.unwrap_or_default();
+        anyhow::bail!("Telegram API error: {}", body);
+    }
+
+    Ok(())
 }

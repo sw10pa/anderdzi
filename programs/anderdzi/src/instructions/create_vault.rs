@@ -25,7 +25,7 @@ pub struct CreateVault<'info> {
 
 pub fn handler(
     ctx: Context<CreateVault>,
-    watcher: Pubkey,
+    watcher: Option<Pubkey>,
     inactivity_period: i64,
     grace_period: i64,
     deposit_amount: u64,
@@ -40,11 +40,7 @@ pub fn handler(
         grace_period >= Vault::MIN_GRACE_PERIOD,
         AnderdziError::GracePeriodTooShort
     );
-    require!(
-        watcher != ctx.accounts.owner.key(),
-        AnderdziError::WatcherCannotBeOwner
-    );
-    require!(watcher != Pubkey::default(), AnderdziError::InvalidWatcher);
+    Vault::validate_watcher(watcher, &ctx.accounts.owner.key())?;
 
     let vault = &mut ctx.accounts.vault;
 

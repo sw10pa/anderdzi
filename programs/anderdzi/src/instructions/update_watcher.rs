@@ -14,15 +14,8 @@ pub struct UpdateWatcher<'info> {
     pub owner: Signer<'info>,
 }
 
-pub fn handler(ctx: Context<UpdateWatcher>, new_watcher: Pubkey) -> Result<()> {
-    require!(
-        new_watcher != Pubkey::default(),
-        AnderdziError::InvalidWatcher
-    );
-    require!(
-        new_watcher != ctx.accounts.owner.key(),
-        AnderdziError::WatcherCannotBeOwner
-    );
+pub fn handler(ctx: Context<UpdateWatcher>, new_watcher: Option<Pubkey>) -> Result<()> {
+    Vault::validate_watcher(new_watcher, &ctx.accounts.owner.key())?;
     ctx.accounts.vault.watcher = new_watcher;
     Ok(())
 }

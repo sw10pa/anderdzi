@@ -70,4 +70,7 @@ pub enum AnderdziError {
 
     #[msg("Staking is enabled — use unstake_withdraw instead")]
     UseUnstakeWithdraw,
+
+    #[msg("No watcher set for this vault - use manual ping instead")]
+    WatcherNotSet,
 }

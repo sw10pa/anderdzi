@@ -1,3 +1,4 @@
+pub mod admin_rotate_watcher;
 pub mod cancel_trigger;
 pub mod close_vault;
 pub mod create_vault;
@@ -20,6 +21,7 @@ pub mod witness_activity;
 // Each instruction module also exports a `handler` fn — the ambiguity is fine
 // because handler is always called via its full module path, never directly.
 #[allow(ambiguous_glob_reexports)]
+pub use admin_rotate_watcher::*;
 pub use cancel_trigger::*;
 pub use close_vault::*;
 pub use create_vault::*;

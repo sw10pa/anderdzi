@@ -34,11 +34,13 @@ anderdzi/
 │       ├── errors.rs      # Custom error codes
 │       ├── marinade.rs    # Marinade Finance CPI adapter
 │       └── instructions/  # One file per instruction
-├── bot/                   # Activity watcher + Telegram bot (Rust)
+├── bot/                   # Activity watcher + notification bot (Rust)
 │   └── src/
 │       ├── main.rs
 │       ├── watcher.rs     # On-chain activity monitoring
-│       └── notifier.rs    # Telegram notifications
+│       ├── notifier.rs    # Telegram notification sender
+│       ├── api.rs         # HTTP API for registration
+│       └── db.rs          # SQLite storage
 ├── app/                   # React frontend (TypeScript)
 ├── Anchor.toml
 └── Cargo.toml
@@ -48,13 +50,13 @@ anderdzi/
 
 ## Tech Stack
 
-| Layer                           | Technology                            |
-| ------------------------------- | ------------------------------------- |
-| Smart contract                  | Anchor 0.32, Rust                     |
-| Activity watcher + Telegram bot | Rust, teloxide, solana-client         |
-| Frontend                        | React, TypeScript, Vite, Tailwind CSS |
-| Wallet connection               | Solana Wallet Adapter                 |
-| Yield                           | Marinade Finance                      |
+| Layer                | Technology                            |
+| -------------------- | ------------------------------------- |
+| Smart contract       | Anchor 0.32, Rust                     |
+| Activity watcher bot | Rust, solana-client, axum, rusqlite   |
+| Frontend             | React, TypeScript, Vite, Tailwind CSS |
+| Wallet connection    | Solana Wallet Adapter                 |
+| Yield                | Marinade Finance                      |
 
 ---
 
@@ -87,14 +89,15 @@ anchor build
 ```bash
 anchor build
 cargo test                                          # Rust unit tests
-node --test --import tsx tests/e2e.ts tests/staking.ts  # Integration tests
+node --test --import tsx tests/e2e.ts tests/staking.ts tests/watcher.ts  # Integration tests
 ```
 
 ### Run the bot
 
 ```bash
 cp bot/.env.example bot/.env
-# fill in TELEGRAM_BOT_TOKEN and SOLANA_RPC_URL
+# fill in SOLANA_RPC_URL, WATCHER_KEYPAIR_PATH, PROGRAM_ID
+# optionally set TELEGRAM_BOT_TOKEN for notifications
 cargo run --bin anderdzi-bot
 ```
 

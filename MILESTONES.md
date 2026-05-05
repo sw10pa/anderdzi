@@ -91,17 +91,23 @@ _Goal: deposited SOL earns yield via Marinade Finance_
 
 ---
 
-## Milestone 7 — Bot
+## Milestone 7 — Bot ✅
 
-_Goal: working Telegram bot with activity watching and notifications_
+_Goal: optional activity watcher bot with optional Telegram notifications_
 
-- [ ] Load all active vaults from on-chain program accounts
-- [ ] Poll `getSignaturesForAddress` for each vault owner
-- [ ] Auto-submit `witness_activity` when on-chain activity detected
-- [ ] Send Telegram notification 30 days before threshold
-- [ ] Send Telegram notification when vault triggers (grace period starts)
-- [ ] Send final Telegram notification 24h before distribution
-- [ ] Deep link in notifications pointing back to dApp
+- [x] Watcher field changed to `Option<Pubkey>` — watcher is now optional per vault; users who prefer manual pings can set watcher to None
+- [x] `Vault::validate_watcher()` helper — centralizes watcher validation (not zero pubkey, not owner) across `create_vault`, `update_watcher`, and `admin_rotate_watcher`
+- [x] `admin_rotate_watcher` instruction — treasury authority can rotate any vault’s watcher keypair for compromised bot recovery
+- [x] Activity watcher bot (`bot/src/watcher.rs`) — loads assigned vaults via `getProgramAccounts` with memcmp filter; polls `getSignaturesForAddress` on each owner; verifies owner was actually a signer (prevents dust-attack spoofing); submits `witness_activity` when new activity detected; hourly poll loop; skips triggered vaults
+- [x] Telegram notification system (optional) — users opt-in via HTTP API (`POST /register`) with ed25519 wallet signature proving vault ownership; bot sends DMs at threshold intervals (30d, 7d, 1d before trigger; on trigger; 1d before distribution; on distribution)
+- [x] PDA ownership verification — API verifies vault pubkey matches owner’s PDA derivation without RPC calls
+- [x] Notification deduplication — SQLite tracks sent notifications per vault/subscriber/type; cleared on heartbeat reset; fail-closed on DB errors (skips sending rather than spamming)
+- [x] Bounded notification ranges — only one pre-trigger notification type applies at a time (30d/7d/1d are exclusive windows, not cumulative)
+- [x] Privacy trade-off documented — if bot is compromised, attacker sees Telegram-to-vault mapping for opted-in users only
+- [x] Unit tests (`tests/watcher.ts`) — 13 tests covering null watcher creation, `WatcherNotSet` error, admin rotation, wrong watcher rejection, opt-in/opt-out, owner-as-watcher rejection
+- [ ] Multisig for treasury authority — prevents single-key compromise from rotating all watchers (deferred)
+- [ ] Rate-limit or timelock on admin watcher rotations (deferred)
+- [ ] Dedicated RPC/indexer — public RPCs may disable `getProgramAccounts` (deferred)
 
 ---
 
