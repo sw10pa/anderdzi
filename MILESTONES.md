@@ -106,6 +106,7 @@ _Goal: optional activity watcher bot with optional Telegram notifications_
 - [x] Notification deduplication — SQLite tracks sent notifications per vault/subscriber/type; cleared on heartbeat reset; fail-closed on DB errors (skips sending rather than spamming)
 - [x] Bounded notification ranges — only one pre-trigger notification type applies at a time (30d/7d/1d are exclusive windows, not cumulative)
 - [x] Privacy trade-off documented — if bot is compromised, attacker sees Telegram-to-vault mapping for opted-in users only
+- [x] Automatic data cleanup — subscription and notification data purged when vaults are distributed or closed (prevents historical data leaks)
 - [x] Unit tests (`tests/watcher.ts`) — 15 tests covering ping, witness_activity (enabled/disabled vault, wrong watcher, owner-as-watcher), opt-in/opt-out, set_default_watcher (update, non-authority, clear to null, opt_in without default)
 - [ ] Multisig for treasury authority — prevents single-key compromise from rotating the default watcher (deferred)
 - [ ] Rate-limit or timelock on admin watcher rotations (deferred)

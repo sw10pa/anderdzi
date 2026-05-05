@@ -41,15 +41,16 @@ impl Database {
 
     pub fn unsubscribe(&self, vault_pubkey: &str, chat_id: i64) -> Result<()> {
         let conn = self.conn.lock().unwrap();
-        conn.execute(
+        let tx = conn.unchecked_transaction()?;
+        tx.execute(
             "DELETE FROM subscriptions WHERE vault_pubkey = ?1 AND chat_id = ?2",
             (vault_pubkey, chat_id),
         )?;
-        // Also clear sent notifications
-        conn.execute(
+        tx.execute(
             "DELETE FROM notifications_sent WHERE vault_pubkey = ?1 AND chat_id = ?2",
             (vault_pubkey, chat_id),
         )?;
+        tx.commit()?;
         Ok(())
     }
 
@@ -107,6 +108,24 @@ impl Database {
             "DELETE FROM notifications_sent WHERE vault_pubkey = ?1",
             [vault_pubkey],
         )?;
+        Ok(())
+    }
+
+    /// Purge all data for a vault (subscriptions + notifications).
+    /// Called when a vault is closed or distributed to prevent historical data leaks.
+    /// Uses a transaction so both tables are cleaned atomically.
+    pub fn purge_vault_data(&self, vault_pubkey: &str) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let tx = conn.unchecked_transaction()?;
+        tx.execute(
+            "DELETE FROM subscriptions WHERE vault_pubkey = ?1",
+            [vault_pubkey],
+        )?;
+        tx.execute(
+            "DELETE FROM notifications_sent WHERE vault_pubkey = ?1",
+            [vault_pubkey],
+        )?;
+        tx.commit()?;
         Ok(())
     }
 }

@@ -147,11 +147,29 @@ fn fetch_vaults_with_filters(
 }
 
 /// Fetches a single vault by its pubkey. Returns None if not found or invalid.
-pub fn fetch_vault(client: &RpcClient, vault_pubkey: &Pubkey) -> Option<VaultData> {
+/// Returns Ok(Some(data)) if vault exists, Ok(None) if account is missing/closed,
+/// Err on RPC or deserialization failures.
+pub fn fetch_vault(client: &RpcClient, vault_pubkey: &Pubkey) -> anyhow::Result<Option<VaultData>> {
+    use solana_client::client_error::ClientErrorKind;
+    use solana_client::rpc_request::RpcError;
+
     match client.get_account_data(vault_pubkey) {
         Ok(data) if data.len() > 8 && data[..8] == VAULT_DISCRIMINATOR => {
-            VaultData::try_from_slice(&data[8..]).ok()
+            let vault = VaultData::try_from_slice(&data[8..])
+                .map_err(|e| anyhow::anyhow!("Failed to deserialize vault: {}", e))?;
+            Ok(Some(vault))
         }
-        _ => None,
+        Ok(data) if data.is_empty() => Ok(None),
+        Ok(_) => Ok(None), // wrong discriminator = not a vault
+        Err(e) => {
+            // Account not found is not an error — it means the vault was closed
+            if matches!(e.kind(), ClientErrorKind::RpcError(RpcError::ForUser(_))) {
+                let msg = e.to_string();
+                if msg.contains("AccountNotFound") || msg.contains("could not find account") {
+                    return Ok(None);
+                }
+            }
+            Err(e.into())
+        }
     }
 }

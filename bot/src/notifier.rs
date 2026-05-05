@@ -133,6 +133,7 @@ pub async fn notify_distributed(
 }
 
 /// Sends notifications for all subscribed vaults.
+/// Also purges subscription data for vaults discovered to be closed on-chain.
 pub async fn notify_all(
     client: &RpcClient,
     state: &Arc<AppState>,
@@ -153,15 +154,61 @@ pub async fn notify_all(
             Err(_) => continue,
         };
 
-        if let Some(vault_data) = common::fetch_vault(client, &vault_pubkey) {
-            check_and_notify(
-                state,
-                &vault_pubkey_str,
-                &vault_data,
-                current_time,
-                telegram_token,
-            )
-            .await;
+        match common::fetch_vault(client, &vault_pubkey) {
+            Ok(Some(vault_data)) => {
+                check_and_notify(
+                    state,
+                    &vault_pubkey_str,
+                    &vault_data,
+                    current_time,
+                    telegram_token,
+                )
+                .await;
+            }
+            Ok(None) => {
+                // Vault closed/distributed â purge inline to avoid double-fetch
+                if let Err(e) = state.db.purge_vault_data(&vault_pubkey_str) {
+                    error!(vault = %vault_pubkey_str, error = %e, "Failed to purge closed vault data");
+                } else {
+                    info!(vault = %vault_pubkey_str, "Purged subscription data for closed vault");
+                }
+            }
+            Err(e) => {
+                warn!(vault = %vault_pubkey_str, error = %e, "RPC error fetching vault, skipping");
+            }
+        }
+    }
+}
+
+/// Purge subscription data for vaults that no longer exist on-chain.
+/// Called when Telegram is disabled; when enabled, notify_all handles cleanup inline.
+pub fn purge_closed_vaults(client: &RpcClient, state: &Arc<AppState>) {
+    let subscribed_vaults = match state.db.get_all_subscribed_vaults() {
+        Ok(v) => v,
+        Err(e) => {
+            warn!(error = %e, "Failed to get subscribed vaults for cleanup");
+            return;
+        }
+    };
+
+    for vault_pubkey_str in subscribed_vaults {
+        let vault_pubkey = match Pubkey::from_str(&vault_pubkey_str) {
+            Ok(pk) => pk,
+            Err(_) => continue,
+        };
+
+        match common::fetch_vault(client, &vault_pubkey) {
+            Ok(None) => {
+                if let Err(e) = state.db.purge_vault_data(&vault_pubkey_str) {
+                    error!(vault = %vault_pubkey_str, error = %e, "Failed to purge closed vault data");
+                } else {
+                    info!(vault = %vault_pubkey_str, "Purged subscription data for closed vault");
+                }
+            }
+            Ok(Some(_)) => {} // Vault still exists
+            Err(e) => {
+                warn!(vault = %vault_pubkey_str, error = %e, "RPC error during cleanup, skipping");
+            }
         }
     }
 }

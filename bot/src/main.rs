@@ -137,4 +137,19 @@ async fn run_cycle(
         notifier::notify_distributed(&state.db, token, &distributed_vaults).await;
         notifier::notify_all(client, state, current_time, token).await;
     }
+
+    // 4. Purge subscription data for distributed vaults
+    for vault_pubkey in &distributed_vaults {
+        if let Err(e) = state.db.purge_vault_data(&vault_pubkey.to_string()) {
+            error!(vault = %vault_pubkey, error = %e, "Failed to purge vault data");
+        } else {
+            info!(vault = %vault_pubkey, "Purged subscription data for distributed vault");
+        }
+    }
+
+    // 5. Purge orphaned subscriptions for vaults closed outside executor
+    // Only needed when Telegram is disabled (notify_all handles cleanup when enabled)
+    if telegram_token.is_none() {
+        notifier::purge_closed_vaults(client, state);
+    }
 }
