@@ -125,26 +125,37 @@ _Goal: optional activity watcher bot with optional Telegram notifications_
 
 ## Milestone 8 — Frontend
 
-_Goal: functional web dApp for all vault operations_
+_Goal: functional web dApp covering all vault operations_
 
-- [ ] Wallet connection (Phantom, Solflare)
-- [ ] Create vault flow (inactivity period, initial deposit)
-- [ ] Beneficiary management UI (add, edit, remove, percentage sliders)
-- [ ] Vault dashboard (status, last heartbeat, time remaining, yield accrued)
-- [ ] Manual check-in (heartbeat) button
-- [ ] Claim interface for beneficiaries
-- [ ] Cancel vault / withdraw
+- [ ] **Wallet & scaffold** — Solana Wallet Adapter (supports all major wallets); React + Vite + Tailwind; Anchor client generation (`anchor build` IDL)
+- [ ] **Create vault** — form for inactivity period, grace period, initial deposit (optional), staking toggle, beneficiary list with percentage sliders (must sum to 100%)
+- [ ] **Vault dashboard** — owner's vault status (active / triggered / distributed), last heartbeat timestamp, countdown to trigger, total deposited, estimated yield (mSOL value − principal)
+- [ ] **Deposit & withdraw** — deposit additional SOL; withdraw partial amount; both auto-stake/unstake when staking enabled
+- [ ] **Staking controls** — enable/disable staking toggle; show current mSOL balance and estimated yield
+- [ ] **Beneficiary management** — edit beneficiary list (add/remove wallets, adjust percentages); call `update_beneficiaries`
+- [ ] **Watcher opt-in/out** — toggle watcher participation; show current watcher status
+- [ ] **I'm alive** — button to reset inactivity timer (sends `ping`)
+- [ ] **Cancel trigger** — button to cancel an active trigger (owner only, during grace period)
+- [ ] **Close vault** — close vault and reclaim all SOL (requires staking disabled, no active trigger)
+- [ ] **Notifications opt-in** — Telegram registration flow (sign message → POST to bot API)
+- [ ] **Error handling** — user-friendly error messages mapped from on-chain error codes; transaction confirmation toasts
 
 ---
 
 ## Milestone 9 — Deploy & Polish
 
-_Goal: live on devnet, demo-ready_
+_Goal: live on devnet, demo-ready, Colosseum submission_
 
-- [ ] Deploy program to devnet
-- [ ] Update program ID in `Anchor.toml`
-- [ ] Frontend connected to devnet
-- [ ] Bot running against devnet
-- [ ] End-to-end demo flow tested
-- [ ] Demo video recorded
-- [ ] Colosseum submission finalized
+- [ ] Deploy program to devnet; update program ID across `Anchor.toml`, IDL, and frontend config
+- [ ] Initialize treasury on devnet (set authority, default watcher)
+- [ ] Create treasury mSOL ATA on devnet (required for yield harvest)
+- [ ] Deploy frontend to a public URL (Vercel / Cloudflare Pages)
+- [ ] Bot deployed and running against devnet (executor + watcher + notifier)
+- [ ] Configure bot environment — `PROGRAM_ID`, RPC/WS URLs, treasury keypair, Telegram token, CORS for frontend ↔ bot API
+- [ ] Fund executor/watcher service wallets with devnet SOL
+- [ ] Frontend connected to devnet with correct program ID and RPC
+- [ ] End-to-end devnet test: create vault → deposit → enable staking → wait → trigger → distribute → verify beneficiary balances
+- [ ] Bot smoke test: watcher detects activity, executor triggers/distributes, notifier sends Telegram DM
+- [ ] Marinade integration verified on devnet (deposit stakes, withdraw unstakes, yield accrues)
+- [ ] Demo video recorded (full lifecycle walkthrough)
+- [ ] Colosseum submission finalized (README, video, deployed links)
