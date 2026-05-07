@@ -1,17 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Trash2, ChevronDown } from "lucide-react";
-import { useMockStore } from "@/store/useMockStore";
+import { PublicKey } from "@solana/web3.js";
+import { useVaultStore } from "@/store/useVaultStore";
+import { useChain } from "@/hooks/useChain";
 import { GlassCard, PillButton, Slider, TextInput, Toggle, Divider } from "@/components/anderdzi/Primitives";
 import type { Beneficiary } from "@/lib/mock";
 
+function isValidPublicKey(address: string): boolean {
+  try { new PublicKey(address); return true; } catch { return false; }
+}
+
 export const Route = createFileRoute("/create")({
-  head: () => ({
-    meta: [
-      { title: "Create Vault — Anderdzi" },
-      { name: "description", content: "Set up your Solana inheritance vault." },
-    ],
-  }),
   component: CreatePage,
 });
 
@@ -20,7 +20,8 @@ const YEAR = 365;
 
 function CreatePage() {
   const navigate = useNavigate();
-  const { createVault, busy } = useMockStore();
+  const { createVault, busy } = useVaultStore();
+  const { program, owner, connection } = useChain();
   const [inactivityDays, setInactivityDays] = useState(YEAR);
   const [graceDays, setGraceDays] = useState(7);
   const [deposit, setDeposit] = useState("");
@@ -31,7 +32,7 @@ function CreatePage() {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([{ address: "", percentage: 100 }]);
 
   const sum = beneficiaries.reduce((s, b) => s + (Number(b.percentage) || 0), 0);
-  const valid = sum === 100 && beneficiaries.every((b) => b.address.length > 0) && beneficiaries.length >= 1 && beneficiaries.length <= 10;
+  const valid = sum === 100 && beneficiaries.length >= 1 && beneficiaries.length <= 10 && beneficiaries.every((b) => isValidPublicKey(b.address));
 
   return (
     <div className="pt-2">
@@ -168,13 +169,13 @@ function CreatePage() {
             disabled={!valid}
             loading={busy === "create"}
             onClick={async () => {
-              await createVault({
+              if (!program || !owner) return;
+              await createVault(program, owner, connection, {
                 inactivityDays,
                 graceDays,
                 deposit: Number(deposit) || 0,
                 staking,
                 watcher,
-                telegram,
                 beneficiaries,
               });
               navigate({ to: "/dashboard" });

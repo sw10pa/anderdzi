@@ -1,26 +1,21 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, XCircle, Archive, Info, Pencil, Plus, Trash2, ArrowDownToLine, ArrowUpFromLine, Wallet, TrendingUp } from "lucide-react";
-import { useMockStore } from "@/store/useMockStore";
+import { useVaultStore } from "@/store/useVaultStore";
+import { useChain } from "@/hooks/useChain";
+import { useSolBalance } from "@/hooks/useSolBalance";
 import { Badge, Divider, GlassCard, PillButton, TextInput, Toggle, truncateAddr } from "@/components/anderdzi/Primitives";
 import { PercentBadge } from "@/routes/create";
 import type { Beneficiary } from "@/lib/mock";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { mockSolBalance } from "@/lib/mock";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({
-    meta: [
-      { title: "Anderdzi" },
-      { name: "description", content: "Manage your inheritance vault." },
-    ],
-  }),
   component: DashboardPage,
 });
 
 function DashboardPage() {
   const navigate = useNavigate();
-  const { connected, vault } = useMockStore();
+  const { connected, vault } = useVaultStore();
 
   useEffect(() => {
     if (!connected) navigate({ to: "/" });
@@ -41,8 +36,10 @@ function DashboardPage() {
 }
 
 function VaultStatusCard() {
-  const { vault, imAlive, cancelTrigger, busy } = useMockStore();
+  const { vault, imAlive, cancelTrigger, busy } = useVaultStore();
+  const { program, owner, connection } = useChain();
   if (!vault) return null;
+
   const triggered = vault.status === "TRIGGERED";
   const elapsedPct = triggered
     ? ((vault.gracePeriodDays - (vault.graceRemainingDays ?? 0)) / vault.gracePeriodDays) * 100
@@ -70,11 +67,20 @@ function VaultStatusCard() {
         </div>
         <div className="mt-4 flex justify-center">
           {triggered ? (
-            <PillButton variant="danger" icon={<XCircle className="h-4 w-4" />} loading={busy === "cancel"} onClick={() => cancelTrigger()}>
+            <PillButton
+              variant="danger"
+              icon={<XCircle className="h-4 w-4" />}
+              loading={busy === "cancel"}
+              onClick={() => { if (program && owner) cancelTrigger(program, owner, connection); }}
+            >
               Cancel Trigger
             </PillButton>
           ) : (
-            <PillButton icon={<Heart className="h-4 w-4" />} loading={busy === "imAlive"} onClick={() => imAlive()}>
+            <PillButton
+              icon={<Heart className="h-4 w-4" />}
+              loading={busy === "imAlive"}
+              onClick={() => { if (program && owner) imAlive(program, owner, connection); }}
+            >
               I'm Alive
             </PillButton>
           )}
@@ -88,7 +94,8 @@ function VaultStatusCard() {
 }
 
 function BalanceCard() {
-  const { vault } = useMockStore();
+  const { vault } = useVaultStore();
+  const walletBalance = useSolBalance();
   const [mode, setMode] = useState<null | "deposit" | "withdraw">(null);
   if (!vault) return null;
 
@@ -128,24 +135,25 @@ function BalanceCard() {
         <PillButton fullWidth icon={<ArrowDownToLine className="h-4 w-4" />} onClick={() => setMode("deposit")}>Deposit</PillButton>
         <PillButton fullWidth variant="secondary" icon={<ArrowUpFromLine className="h-4 w-4" />} onClick={() => setMode("withdraw")}>Withdraw</PillButton>
       </div>
-      <AmountDialog mode={mode} onClose={() => setMode(null)} vaultBalance={vault.deposited} walletBalance={mockSolBalance} />
+      <AmountDialog mode={mode} onClose={() => setMode(null)} vaultBalance={vault.deposited} walletBalance={walletBalance} />
     </GlassCard>
   );
 }
 
 function AmountDialog({ mode, onClose, vaultBalance, walletBalance }: { mode: null | "deposit" | "withdraw"; onClose: () => void; vaultBalance: number; walletBalance: number }) {
-  const { deposit, withdraw, busy } = useMockStore();
+  const { deposit, withdraw, busy } = useVaultStore();
+  const { program, owner, connection } = useChain();
   const [amount, setAmount] = useState("");
   const open = mode !== null;
   const isDeposit = mode === "deposit";
   const max = isDeposit ? walletBalance : vaultBalance;
   const n = Number(amount);
-  const invalid = !n || n <= 0 || n > max;
+  const invalid = !n || n <= 0 || n > max || !program || !owner;
 
   const submit = async () => {
-    if (invalid) return;
-    if (isDeposit) await deposit(n);
-    else await withdraw(n);
+    if (invalid || !program || !owner) return;
+    if (isDeposit) await deposit(program, owner, n, connection);
+    else await withdraw(program, owner, n, connection);
     setAmount("");
     onClose();
   };
@@ -185,9 +193,11 @@ function AmountDialog({ mode, onClose, vaultBalance, walletBalance }: { mode: nu
 }
 
 function CloseVaultFooter() {
-  const { vault, closeVault, busy } = useMockStore();
+  const { vault, closeVault, busy } = useVaultStore();
+  const { program, owner } = useChain();
   const [confirm, setConfirm] = useState(false);
   if (!vault || vault.stakingEnabled) return null;
+
   return (
     <>
       <div className="anim-fade-up mt-2 flex justify-center pb-4" style={{ animationDelay: "400ms" }}>
@@ -209,7 +219,12 @@ function CloseVaultFooter() {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-2 pt-2">
             <PillButton fullWidth variant="secondary" onClick={() => setConfirm(false)}>Cancel</PillButton>
-            <PillButton fullWidth variant="danger" loading={busy === "close"} onClick={async () => { await closeVault(); setConfirm(false); }}>
+            <PillButton
+              fullWidth
+              variant="danger"
+              loading={busy === "close"}
+              onClick={async () => { if (program && owner) { await closeVault(program, owner); setConfirm(false); } }}
+            >
               Close Vault
             </PillButton>
           </div>
@@ -220,7 +235,8 @@ function CloseVaultFooter() {
 }
 
 function BeneficiariesCard() {
-  const { vault, saveBeneficiaries, busy } = useMockStore();
+  const { vault, saveBeneficiaries, busy } = useVaultStore();
+  const { program, owner, connection } = useChain();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Beneficiary[]>([]);
 
@@ -277,7 +293,7 @@ function BeneficiariesCard() {
             </button>
           )}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <PillButton fullWidth disabled={!valid} loading={busy === "beneficiaries"} onClick={async () => { await saveBeneficiaries(draft); setEditing(false); }}>Save Changes</PillButton>
+            <PillButton fullWidth disabled={!valid} loading={busy === "beneficiaries"} onClick={async () => { if (program && owner) { await saveBeneficiaries(program, owner, draft, connection); setEditing(false); } }}>Save Changes</PillButton>
             <PillButton fullWidth variant="secondary" onClick={() => setEditing(false)}>Cancel</PillButton>
           </div>
         </div>
@@ -287,54 +303,95 @@ function BeneficiariesCard() {
 }
 
 function SettingsCard() {
-  const { vault, setToggle, connectTelegram, busy } = useMockStore();
+  const { vault, setToggle, connectTelegram, disconnectTelegram, busy } = useVaultStore();
+  const { program, owner, connection, wallet } = useChain();
   const [chatId, setChatId] = useState("");
   const [tgOpen, setTgOpen] = useState(false);
   if (!vault) return null;
 
-  const rows: { key: "watcherEnabled" | "stakingEnabled" | "telegramEnabled"; label: string; info: string }[] = [
-    { key: "watcherEnabled", label: "Activity Watcher", info: "Monitors on-chain activity automatically." },
-    { key: "stakingEnabled", label: "Staking", info: "Earn yield via Marinade liquid staking." },
-    { key: "telegramEnabled", label: "Telegram Notifications", info: "Get notified before trigger and on key events." },
-  ];
+  const handleToggle = async (key: "watcherEnabled" | "stakingEnabled", val: boolean) => {
+    if (program && owner) setToggle(program, owner, key, val, connection);
+  };
+
+  const handleTelegramToggle = (val: boolean) => {
+    if (val) {
+      setTgOpen(true);
+    } else {
+      if (vault.telegramChatId && wallet.signMessage && owner) {
+        disconnectTelegram(vault.telegramChatId, vault.address, wallet.signMessage, owner.toBase58());
+      }
+    }
+  };
 
   return (
     <GlassCard delay={320}>
       <div className="card-title mb-3 text-left">Features</div>
-      {rows.map((r, i) => (
-        <div key={r.key}>
-          {i > 0 && <Divider />}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-[var(--text)]">{r.label}</span>
-            <div className="group relative flex items-center gap-2">
-              <Info className="h-4 w-4 text-[var(--text-muted)]" />
-              <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10 max-w-[220px] text-wrap">
-                {r.info}
-              </span>
-              <Toggle
-                checked={vault[r.key] as boolean}
-                onChange={(v) => {
-                  setToggle(r.key, v);
-                  if (r.key === "telegramEnabled" && v) setTgOpen(true);
-                }}
-                disabled={busy === r.key}
-              />
-            </div>
-          </div>
-          {r.key === "telegramEnabled" && vault.telegramEnabled && (
-            <div className="anim-fade-up mt-3 flex justify-end">
-              <button
-                onClick={() => setTgOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-[var(--r)] bg-[var(--accent-dim)] px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
-                style={{ color: "var(--accent)" }}
-              >
-                <Pencil className="h-3 w-3" />
-                {chatId ? `Chat ID: ${chatId}` : "Set chat ID"}
-              </button>
-            </div>
-          )}
+
+      {/* Watcher toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-[var(--text)]">Activity Watcher</span>
+        <div className="group relative flex items-center gap-2">
+          <Info className="h-4 w-4 text-[var(--text-muted)]" />
+          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+            Monitors on-chain activity automatically.
+          </span>
+          <Toggle
+            checked={vault.watcherEnabled}
+            onChange={(v) => handleToggle("watcherEnabled", v)}
+            disabled={busy === "watcherEnabled"}
+          />
         </div>
-      ))}
+      </div>
+
+      <Divider />
+
+      {/* Staking toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-[var(--text)]">Staking</span>
+        <div className="group relative flex items-center gap-2">
+          <Info className="h-4 w-4 text-[var(--text-muted)]" />
+          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+            Earn yield via Marinade liquid staking. Mainnet only.
+          </span>
+          <Toggle
+            checked={vault.stakingEnabled}
+            onChange={(v) => handleToggle("stakingEnabled", v)}
+            disabled={busy === "stakingEnabled"}
+          />
+        </div>
+      </div>
+
+      <Divider />
+
+      {/* Telegram toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-[var(--text)]">Telegram Notifications</span>
+        <div className="group relative flex items-center gap-2">
+          <Info className="h-4 w-4 text-[var(--text-muted)]" />
+          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+            Get notified before trigger and on key events.
+          </span>
+          <Toggle
+            checked={vault.telegramEnabled}
+            onChange={handleTelegramToggle}
+            disabled={busy === "telegram"}
+          />
+        </div>
+      </div>
+
+      {vault.telegramEnabled && (
+        <div className="anim-fade-up mt-3 flex justify-end">
+          <button
+            onClick={() => setTgOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--r)] bg-[var(--accent-dim)] px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
+            style={{ color: "var(--accent)" }}
+          >
+            <Pencil className="h-3 w-3" />
+            {vault.telegramChatId ? `Chat ID: ${vault.telegramChatId}` : "Set chat ID"}
+          </button>
+        </div>
+      )}
+
       <Dialog open={tgOpen} onOpenChange={setTgOpen}>
         <DialogContent className="bg-[var(--surface)] border-[var(--border)] text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
           <DialogHeader>
@@ -347,7 +404,17 @@ function SettingsCard() {
             <TextInput autoFocus placeholder="e.g. 123456789" value={chatId} onChange={(e) => setChatId(e.target.value)} />
             <div className="grid grid-cols-2 gap-2 pt-2">
               <PillButton fullWidth variant="secondary" onClick={() => setTgOpen(false)}>Cancel</PillButton>
-              <PillButton fullWidth disabled={!chatId} loading={busy === "telegram"} onClick={async () => { if (chatId) { await connectTelegram(chatId); setTgOpen(false); } }}>
+              <PillButton
+                fullWidth
+                disabled={!chatId || !wallet.signMessage || !owner}
+                loading={busy === "telegram"}
+                onClick={async () => {
+                  if (chatId && wallet.signMessage && owner) {
+                    await connectTelegram(chatId, vault.address, wallet.signMessage, owner.toBase58());
+                    setTgOpen(false);
+                  }
+                }}
+              >
                 Connect
               </PillButton>
             </div>

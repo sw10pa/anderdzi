@@ -1,4 +1,4 @@
-export const MOCK_ENABLED = true;
+export const MOCK_ENABLED = false;
 
 export type VaultStateKey = "ACTIVE" | "TRIGGERED" | "NO_STAKING" | "NO_VAULT" | "DISCONNECTED";
 

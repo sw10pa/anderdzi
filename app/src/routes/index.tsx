@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { Wallet, ListChecks, ShieldCheck, ArrowDownUp, Users, Activity, TrendingUp, Bell } from "lucide-react";
-import { useMockStore } from "@/store/useMockStore";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useVaultStore } from "@/store/useVaultStore";
 import { PillButton } from "@/components/anderdzi/Primitives";
 import { Logo } from "@/components/anderdzi/Logo";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
@@ -31,7 +32,8 @@ const STEPS = [
 
 function Index() {
   const navigate = useNavigate();
-  const { connected, vault, connect } = useMockStore();
+  const { connected, vault } = useVaultStore();
+  const { setVisible } = useWalletModal();
   const stepsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ function Index() {
       </p>
 
       <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
-        <PillButton icon={<Wallet className="h-4 w-4" />} onClick={() => { connect(); navigate({ to: "/dashboard" }); }}>
+        <PillButton icon={<Wallet className="h-4 w-4" />} onClick={() => setVisible(true)}>
           Connect Wallet
         </PillButton>
         <PillButton variant="secondary" icon={<ListChecks className="h-4 w-4" />} onClick={() => stepsRef.current?.scrollIntoView({ behavior: "smooth" })}>

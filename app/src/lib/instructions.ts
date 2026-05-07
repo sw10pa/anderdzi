@@ -11,10 +11,14 @@ const TREASURY_PUBKEY = PublicKey.findProgramAddressSync(
 )[0];
 
 function toBeneficiaryArg(b: Beneficiary) {
-  return {
-    wallet: new PublicKey(b.address),
-    shareBps: b.percentage * 100,
-  };
+  try {
+    return {
+      wallet: new PublicKey(b.address),
+      shareBps: b.percentage * 100,
+    };
+  } catch {
+    throw new Error(`Invalid beneficiary address: "${b.address}"`);
+  }
 }
 
 export async function createVault(

@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, Link, createRootRouteWithContext } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/anderdzi/Navbar";
-import { MockSwitcher } from "@/components/anderdzi/MockSwitcher";
 import { WalletProvider } from "@/providers/WalletProvider";
+import { useWalletSync } from "@/hooks/useWalletSync";
 
 function NotFoundComponent() {
   return (
@@ -32,18 +32,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFoundComponent,
 });
 
+function WalletSync() {
+  useWalletSync();
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
       <WalletProvider>
+        <WalletSync />
         <div className="min-h-screen">
           <Navbar />
           <main className="mx-auto w-full max-w-[520px] px-4 pb-24">
             <Outlet />
           </main>
-          <MockSwitcher />
           <Toaster
             position="bottom-right"
             toastOptions={{

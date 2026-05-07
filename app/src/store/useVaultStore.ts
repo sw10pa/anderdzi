@@ -52,8 +52,9 @@ async function runTx(
     await fn();
     toast.success("Transaction confirmed ✓", { description: label });
   } catch (e: unknown) {
+    console.error(`[${label}] Transaction failed:`, e);
     const msg = e instanceof Error ? e.message : String(e);
-    toast.error("Transaction failed", { description: msg.slice(0, 120) });
+    toast.error("Transaction failed", { description: msg.slice(0, 200) });
   } finally {
     set({ busy: null });
   }
@@ -141,8 +142,9 @@ export const useVaultStore = create<State & Actions>((set, get) => ({
       if (v) set({ vault: { ...v, telegramEnabled: true, telegramChatId: chatId } });
       toast.success("Telegram connected ✓");
     } catch (e: unknown) {
+      console.error("[connectTelegram] failed:", e);
       const msg = e instanceof Error ? e.message : String(e);
-      toast.error("Failed to connect Telegram", { description: msg.slice(0, 120) });
+      toast.error("Failed to connect Telegram", { description: msg.slice(0, 200) });
     } finally {
       set({ busy: null });
     }
@@ -170,8 +172,9 @@ export const useVaultStore = create<State & Actions>((set, get) => ({
       if (v) set({ vault: { ...v, telegramEnabled: false, telegramChatId: undefined } });
       toast.success("Telegram disconnected");
     } catch (e: unknown) {
+      console.error("[disconnectTelegram] failed:", e);
       const msg = e instanceof Error ? e.message : String(e);
-      toast.error("Failed to disconnect Telegram", { description: msg.slice(0, 120) });
+      toast.error("Failed to disconnect Telegram", { description: msg.slice(0, 200) });
     } finally {
       set({ busy: null });
     }
