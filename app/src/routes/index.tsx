@@ -78,7 +78,7 @@ function Index() {
         {/* Features */}
         <div className="mt-12 mx-auto grid w-full max-w-[900px] grid-cols-2 gap-3 px-4 sm:grid-cols-3">
           {FEATURES.map((f) => (
-            <div key={f.title} className="glass-card flex items-center gap-3 p-4">
+            <div key={f.title} className="glass-card flex flex-col items-center gap-2 p-4 text-center sm:flex-row sm:items-center sm:gap-3 sm:text-left">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--r)] bg-[var(--accent-dim)]">
                 <f.icon className="h-4 w-4" style={{ color: "var(--accent)" }} />
               </span>
