@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-anderdzi = "6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x"
+anderdzi = "HqAguZH2aj1sSc4Zi6Ck1MBV1bpz1z4cyZUnYT3bTztN"
 
 [programs.localnet]
 anderdzi = "6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x"
@@ -15,7 +15,7 @@ anderdzi = "6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

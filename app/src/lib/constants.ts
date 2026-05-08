@@ -1,2 +1,2 @@
-export const PROGRAM_ID = "6xgUzv1pYovTNK1QYAEK5xRdHeTwaum6rGX6AEJqhA1x";
+export const PROGRAM_ID = "HqAguZH2aj1sSc4Zi6Ck1MBV1bpz1z4cyZUnYT3bTztN";
 export const BOT_API_URL = import.meta.env.VITE_BOT_API_URL ?? "";
