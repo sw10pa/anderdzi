@@ -28,18 +28,34 @@ type Actions = {
   deposit: (amount: number) => Promise<void>;
   withdraw: (amount: number) => Promise<void>;
   saveBeneficiaries: (b: Beneficiary[]) => Promise<void>;
-  setToggle: (key: "watcherEnabled" | "stakingEnabled" | "telegramEnabled", v: boolean) => Promise<void>;
+  setToggle: (
+    key: "watcherEnabled" | "stakingEnabled" | "telegramEnabled",
+    v: boolean,
+  ) => Promise<void>;
   connectTelegram: (chatId: string) => Promise<void>;
-  createVault: (data: { inactivityDays: number; graceDays: number; deposit: number; staking: boolean; watcher?: boolean; telegram?: boolean; beneficiaries: Beneficiary[] }) => Promise<void>;
+  createVault: (data: {
+    inactivityDays: number;
+    graceDays: number;
+    deposit: number;
+    staking: boolean;
+    watcher?: boolean;
+    telegram?: boolean;
+    beneficiaries: Beneficiary[];
+  }) => Promise<void>;
 };
 
 function vaultFor(state: VaultStateKey): Vault | null {
   switch (state) {
-    case "ACTIVE": return { ...mockVaultActive, beneficiaries: [...mockVaultActive.beneficiaries] };
-    case "TRIGGERED": return { ...mockVaultTriggered, beneficiaries: [...mockVaultTriggered.beneficiaries] };
-    case "NO_STAKING": return { ...mockVaultNoStaking, beneficiaries: [...mockVaultNoStaking.beneficiaries] };
-    case "NO_VAULT": return null;
-    case "DISCONNECTED": return null;
+    case "ACTIVE":
+      return { ...mockVaultActive, beneficiaries: [...mockVaultActive.beneficiaries] };
+    case "TRIGGERED":
+      return { ...mockVaultTriggered, beneficiaries: [...mockVaultTriggered.beneficiaries] };
+    case "NO_STAKING":
+      return { ...mockVaultNoStaking, beneficiaries: [...mockVaultNoStaking.beneficiaries] };
+    case "NO_VAULT":
+      return null;
+    case "DISCONNECTED":
+      return null;
   }
 }
 
@@ -59,7 +75,8 @@ export const useMockStore = create<State & Actions>((set, get) => ({
   busy: null,
 
   connect: () => set({ connected: true, walletAddress: mockWalletAddress }),
-  disconnect: () => set({ connected: false, walletAddress: null, vaultState: "DISCONNECTED", vault: null }),
+  disconnect: () =>
+    set({ connected: false, walletAddress: null, vaultState: "DISCONNECTED", vault: null }),
 
   setVaultState: (s) => {
     const connected = s !== "DISCONNECTED";
@@ -75,14 +92,32 @@ export const useMockStore = create<State & Actions>((set, get) => ({
     set({ busy: "imAlive" });
     await fakeTx("I'm Alive — countdown reset");
     const v = get().vault;
-    if (v) set({ vault: { ...v, daysUntilTrigger: v.inactivityPeriodDays, lastSeenDays: 0, status: "ACTIVE", graceRemainingDays: undefined } });
+    if (v)
+      set({
+        vault: {
+          ...v,
+          daysUntilTrigger: v.inactivityPeriodDays,
+          lastSeenDays: 0,
+          status: "ACTIVE",
+          graceRemainingDays: undefined,
+        },
+      });
     set({ busy: null });
   },
   cancelTrigger: async () => {
     set({ busy: "cancel" });
     await fakeTx("Trigger canceled");
     const v = get().vault;
-    if (v) set({ vault: { ...v, status: "ACTIVE", daysUntilTrigger: v.inactivityPeriodDays, lastSeenDays: 0, graceRemainingDays: undefined } });
+    if (v)
+      set({
+        vault: {
+          ...v,
+          status: "ACTIVE",
+          daysUntilTrigger: v.inactivityPeriodDays,
+          lastSeenDays: 0,
+          graceRemainingDays: undefined,
+        },
+      });
     set({ busy: null });
   },
   closeVault: async () => {
@@ -142,6 +177,12 @@ export const useMockStore = create<State & Actions>((set, get) => ({
       stakingEnabled: data.staking,
       telegramEnabled: data.telegram ?? false,
     };
-    set({ vault: v, vaultState: "ACTIVE", busy: null, connected: true, walletAddress: mockWalletAddress });
+    set({
+      vault: v,
+      vaultState: "ACTIVE",
+      busy: null,
+      connected: true,
+      walletAddress: mockWalletAddress,
+    });
   },
 }));

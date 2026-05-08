@@ -123,22 +123,27 @@ _Goal: optional activity watcher bot with optional Telegram notifications_
 
 ---
 
-## Milestone 8 — Frontend
+## Milestone 8 — Frontend ✅
 
 _Goal: functional web dApp covering all vault operations_
 
-- [ ] **Wallet & scaffold** — Solana Wallet Adapter (supports all major wallets); React + Vite + Tailwind; Anchor client generation (`anchor build` IDL)
-- [ ] **Create vault** — form for inactivity period, grace period, initial deposit (optional), staking toggle, beneficiary list with percentage sliders (must sum to 100%)
-- [ ] **Vault dashboard** — owner's vault status (active / triggered / distributed), last heartbeat timestamp, countdown to trigger, total deposited, estimated yield (mSOL value − principal)
-- [ ] **Deposit & withdraw** — deposit additional SOL; withdraw partial amount; both auto-stake/unstake when staking enabled
-- [ ] **Staking controls** — enable/disable staking toggle; show current mSOL balance and estimated yield
-- [ ] **Beneficiary management** — edit beneficiary list (add/remove wallets, adjust percentages); call `update_beneficiaries`
-- [ ] **Watcher opt-in/out** — toggle watcher participation; show current watcher status
-- [ ] **I'm alive** — button to reset inactivity timer (sends `ping`)
-- [ ] **Cancel trigger** — button to cancel an active trigger (owner only, during grace period)
-- [ ] **Close vault** — close vault and reclaim all SOL (requires staking disabled, no active trigger)
-- [ ] **Notifications opt-in** — Telegram registration flow (sign message → POST to bot API)
-- [ ] **Error handling** — user-friendly error messages mapped from on-chain error codes; transaction confirmation toasts
+- [x] **Wallet & scaffold** — Solana Wallet Adapter (supports all major wallets); React + Vite + TypeScript + Tailwind CSS v4; Anchor client generation from IDL; TanStack Router for routing; Zustand for state management
+- [x] **Landing page** — two-part layout: full-viewport hero with ANDERDZI branding, features grid (3-col desktop, 2-col mobile), and "How It Works" step-by-step section below the fold
+- [x] **Create vault** — form with inactivity period slider (6–120 months with year+month display), grace period slider (7–30 days, default 14), initial deposit with MAX button, beneficiary list with percentage inputs (1–10 beneficiaries, 2-decimal precision, must sum to 100%), collapsible optional features (staking, watcher, Telegram) with info tooltips
+- [x] **Vault dashboard** — owner's vault status badge (active / triggered), action button (I'm Alive / Cancel Trigger), countdown with progress bar, last activity timestamp
+- [x] **Deposit & withdraw** — modal dialogs with MAX button; deposit from wallet, withdraw from vault
+- [x] **Staking controls** — enable/disable staking toggle on dashboard; deposited balance and yield display
+- [x] **Beneficiary management** — inline edit mode on dashboard; add/remove wallets, adjust percentages; validation (sum = 100%, valid Solana addresses)
+- [x] **Watcher opt-in/out** — toggle watcher participation on dashboard with info tooltip
+- [x] **I'm alive** — button on dashboard to reset inactivity timer (sends `ping`)
+- [x] **Cancel trigger** — button on dashboard to cancel an active trigger (owner only, during grace period)
+- [x] **Close vault** — confirmation dialog; close vault and reclaim all SOL (requires staking disabled)
+- [x] **Notifications opt-in** — Telegram chat ID registration flow (sign message → POST to bot API); connect/disconnect from dashboard
+- [x] **Error handling** — user-friendly toast notifications for transaction success/failure; on-chain error messages surfaced
+- [x] **Design system** — consistent color palette (CSS custom properties), Space Grotesk + Figtree typography, glass-card components, standardized border radii and spacing
+- [x] **Responsive design** — mobile-first layout with responsive breakpoints; all pages adapt from mobile to desktop
+- [x] **Navigation** — wallet address display with disconnect button; automatic redirect based on vault state (landing → create → dashboard)
+- [x] **Shared footer** — X and GitHub links, copyright notice on all pages
 
 ---
 

@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Figtree:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap");
 
 /*
  * Design system definition.
@@ -77,16 +77,17 @@
   --radius: 0.625rem;
   /* Unified app radius */
   --r: 12px;
-  --bg: #0F3932;
-  --surface: #1F453C;
-  --surface-2: #2A5548;
-  --text: #F1F1F1;
-  --text-muted: #8BA89F;
-  --accent: #4AFF91;
+  --bg: #0f3932;
+  --surface: #1f453c;
+  --surface-2: #2a5548;
+  --text: #f1f1f1;
+  --text-muted: #8ba89f;
+  --accent: #4aff91;
   --accent-dim: rgba(74, 255, 145, 0.12);
-  --danger: #FF6B6B;
-  --background: #0F3932;
-  --foreground: #F1F1F1;
+  --accent-solid: #1f8a4c;
+  --danger: #ff6b6b;
+  --background: #0f3932;
+  --foreground: #f1f1f1;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
@@ -101,8 +102,8 @@
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
+  --border: rgba(241, 241, 241, 0.08);
+  --input: rgba(241, 241, 241, 0.12);
   --ring: oklch(0.704 0.04 256.788);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -165,7 +166,13 @@
     font-family: "Figtree", ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4, .card-title, .page-title, .section-header {
+  h1,
+  h2,
+  h3,
+  h4,
+  .card-title,
+  .page-title,
+  .section-header {
     font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
     letter-spacing: -0.025em;
     font-weight: 600;
@@ -179,12 +186,16 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(241, 241, 241, 0.08);
     border-radius: var(--r);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 8px 32px rgba(0, 0, 0, 0.3);
     transition: all 200ms ease;
   }
   .glass-card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 40px rgba(0, 0, 0, 0.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 12px 40px rgba(0, 0, 0, 0.4);
   }
   .accent-glow {
     box-shadow: 0 0 20px rgba(74, 255, 145, 0.25);
@@ -243,8 +254,13 @@
     -moz-appearance: textfield;
   }
   .no-spin::-webkit-outer-spin-button,
-  .no-spin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  .no-spin { -moz-appearance: textfield; }
+  .no-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-spin {
+    -moz-appearance: textfield;
+  }
   .input-base::placeholder {
     color: var(--text-muted);
   }
@@ -259,12 +275,25 @@
     animation: pulseDot 1.6s ease-in-out infinite;
   }
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes pulseDot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.85); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(0.85);
+    }
   }
   /* Custom range slider */
   input[type="range"].anderdzi-slider {

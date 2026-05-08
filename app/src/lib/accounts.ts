@@ -10,15 +10,12 @@ const PROGRAM_PUBKEY = new PublicKey(PROGRAM_ID);
 export function deriveVaultPda(owner: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [Buffer.from("vault"), owner.toBuffer()],
-    PROGRAM_PUBKEY
+    PROGRAM_PUBKEY,
   );
   return pda;
 }
 
-export async function fetchVault(
-  connection: Connection,
-  owner: PublicKey
-): Promise<Vault | null> {
+export async function fetchVault(connection: Connection, owner: PublicKey): Promise<Vault | null> {
   try {
     const provider = new AnchorProvider(connection, {} as never, { commitment: "confirmed" });
     const program = new Program<Anderdzi>(idl as Anderdzi, provider);

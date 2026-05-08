@@ -7,7 +7,7 @@ import type { Beneficiary } from "./mock";
 
 const TREASURY_PUBKEY = PublicKey.findProgramAddressSync(
   [Buffer.from("treasury")],
-  new PublicKey(PROGRAM_ID)
+  new PublicKey(PROGRAM_ID),
 )[0];
 
 function toBeneficiaryArg(b: Beneficiary) {
@@ -31,7 +31,7 @@ export async function createVault(
     stakingEnabled: boolean;
     enableWatcher: boolean;
     beneficiaries: Beneficiary[];
-  }
+  },
 ): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
   const inactivityPeriod = new BN(params.inactivityDays * 86400);
@@ -45,9 +45,9 @@ export async function createVault(
       gracePeriod,
       depositAmount,
       params.stakingEnabled,
-      params.beneficiaries.map(toBeneficiaryArg)
+      params.beneficiaries.map(toBeneficiaryArg),
     )
-    .accounts({
+    .accountsPartial({
       vault: vaultPda,
       owner,
       treasury: TREASURY_PUBKEY,
@@ -58,112 +58,76 @@ export async function createVault(
 export async function deposit(
   program: Program<Anderdzi>,
   owner: PublicKey,
-  amountSol: number
+  amountSol: number,
 ): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
   return program.methods
     .deposit(new BN(Math.floor(amountSol * LAMPORTS_PER_SOL)))
-    .accounts({ vault: vaultPda, owner })
+    .accountsPartial({ vault: vaultPda, owner })
     .rpc();
 }
 
 export async function withdraw(
   program: Program<Anderdzi>,
   owner: PublicKey,
-  amountSol: number
+  amountSol: number,
 ): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
   return program.methods
     .withdraw(new BN(Math.floor(amountSol * LAMPORTS_PER_SOL)))
-    .accounts({ vault: vaultPda, owner })
+    .accountsPartial({ vault: vaultPda, owner })
     .rpc();
 }
 
-export async function ping(
-  program: Program<Anderdzi>,
-  owner: PublicKey
-): Promise<string> {
+export async function ping(program: Program<Anderdzi>, owner: PublicKey): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods
-    .ping()
-    .accounts({ vault: vaultPda, owner })
-    .rpc();
+  return program.methods.ping().accountsPartial({ vault: vaultPda, owner }).rpc();
 }
 
-export async function cancelTrigger(
-  program: Program<Anderdzi>,
-  owner: PublicKey
-): Promise<string> {
+export async function cancelTrigger(program: Program<Anderdzi>, owner: PublicKey): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods
-    .cancelTrigger()
-    .accounts({ vault: vaultPda, owner })
-    .rpc();
+  return program.methods.cancelTrigger().accountsPartial({ vault: vaultPda, owner }).rpc();
 }
 
-export async function closeVault(
-  program: Program<Anderdzi>,
-  owner: PublicKey
-): Promise<string> {
+export async function closeVault(program: Program<Anderdzi>, owner: PublicKey): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods
-    .closeVault()
-    .accounts({ vault: vaultPda, owner })
-    .rpc();
+  return program.methods.closeVault().accountsPartial({ vault: vaultPda, owner }).rpc();
 }
 
 export async function updateBeneficiaries(
   program: Program<Anderdzi>,
   owner: PublicKey,
-  beneficiaries: Beneficiary[]
+  beneficiaries: Beneficiary[],
 ): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
   return program.methods
     .updateBeneficiaries(beneficiaries.map(toBeneficiaryArg))
-    .accounts({ vault: vaultPda, owner })
+    .accountsPartial({ vault: vaultPda, owner })
     .rpc();
 }
 
-export async function optInWatcher(
-  program: Program<Anderdzi>,
-  owner: PublicKey
-): Promise<string> {
+export async function optInWatcher(program: Program<Anderdzi>, owner: PublicKey): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
   return program.methods
     .optInWatcher()
-    .accounts({ vault: vaultPda, owner, treasury: TREASURY_PUBKEY })
+    .accountsPartial({ vault: vaultPda, owner, treasury: TREASURY_PUBKEY })
     .rpc();
 }
 
-export async function optOutWatcher(
-  program: Program<Anderdzi>,
-  owner: PublicKey
-): Promise<string> {
+export async function optOutWatcher(program: Program<Anderdzi>, owner: PublicKey): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods
-    .optOutWatcher()
-    .accounts({ vault: vaultPda, owner })
-    .rpc();
+  return program.methods.optOutWatcher().accountsPartial({ vault: vaultPda, owner }).rpc();
 }
 
-export async function enableStaking(
-  program: Program<Anderdzi>,
-  owner: PublicKey
-): Promise<string> {
+export async function enableStaking(program: Program<Anderdzi>, owner: PublicKey): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods
-    .enableStaking()
-    .accounts({ vault: vaultPda, owner })
-    .rpc();
+  return program.methods.enableStaking().accountsPartial({ vault: vaultPda, owner }).rpc();
 }
 
 export async function disableStaking(
   program: Program<Anderdzi>,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods
-    .disableStaking()
-    .accounts({ vault: vaultPda, owner })
-    .rpc();
+  return program.methods.disableStaking().accountsPartial({ vault: vaultPda, owner }).rpc();
 }

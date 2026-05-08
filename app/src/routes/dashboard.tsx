@@ -1,13 +1,39 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, XCircle, Archive, Info, Pencil, Plus, Trash2, ArrowDownToLine, ArrowUpFromLine, Wallet, TrendingUp } from "lucide-react";
+import {
+  Heart,
+  XCircle,
+  Archive,
+  Info,
+  Pencil,
+  Plus,
+  Trash2,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Wallet,
+  TrendingUp,
+} from "lucide-react";
 import { useVaultStore } from "@/store/useVaultStore";
 import { useChain } from "@/hooks/useChain";
 import { useSolBalance } from "@/hooks/useSolBalance";
-import { Badge, Divider, GlassCard, PillButton, TextInput, Toggle, truncateAddr } from "@/components/anderdzi/Primitives";
+import {
+  Badge,
+  Divider,
+  GlassCard,
+  PillButton,
+  TextInput,
+  Toggle,
+  truncateAddr,
+} from "@/components/anderdzi/Primitives";
 import { PercentBadge } from "@/routes/create";
 import type { Beneficiary } from "@/lib/mock";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -16,6 +42,10 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   const navigate = useNavigate();
   const { connected, vault } = useVaultStore();
+
+  useEffect(() => {
+    document.title = "Anderdzi";
+  }, []);
 
   useEffect(() => {
     if (!connected) navigate({ to: "/" });
@@ -48,30 +78,15 @@ function VaultStatusCard() {
   return (
     <GlassCard delay={0}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-mono text-[var(--text-muted)]">{truncateAddr(vault.address, 6, 6)}</span>
-        <Badge kind={vault.status} />
-      </div>
-      <div className="mt-6 text-center">
-        <div className="stat-label">{triggered ? "Grace period remaining" : "Time until trigger"}</div>
-        <div className="mt-2 flex items-baseline justify-center gap-2">
-          <span className={`text-4xl font-bold ${triggered ? "text-[var(--danger)]" : "text-[var(--text)]"}`}>
-            {triggered ? vault.graceRemainingDays : vault.daysUntilTrigger}
-          </span>
-          <span className="text-sm text-[var(--text-muted)]">days</span>
-        </div>
-        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(241,241,241,0.08)]">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${elapsedPct}%`, background: triggered ? "var(--danger)" : "var(--accent)", boxShadow: triggered ? "0 0 12px rgba(255,107,107,0.5)" : "0 0 12px rgba(74,255,145,0.5)" }}
-          />
-        </div>
-        <div className="mt-4 flex justify-center">
+        <div>
           {triggered ? (
             <PillButton
               variant="danger"
               icon={<XCircle className="h-4 w-4" />}
               loading={busy === "cancel"}
-              onClick={() => { if (program && owner) cancelTrigger(program, owner, connection); }}
+              onClick={() => {
+                if (program && owner) cancelTrigger(program, owner, connection);
+              }}
             >
               Cancel Trigger
             </PillButton>
@@ -79,11 +94,39 @@ function VaultStatusCard() {
             <PillButton
               icon={<Heart className="h-4 w-4" />}
               loading={busy === "imAlive"}
-              onClick={() => { if (program && owner) imAlive(program, owner, connection); }}
+              onClick={() => {
+                if (program && owner) imAlive(program, owner, connection);
+              }}
             >
               I'm Alive
             </PillButton>
           )}
+        </div>
+        <Badge kind={vault.status} />
+      </div>
+      <div className="mt-6 text-center">
+        <div className="stat-label">
+          {triggered ? "Grace period remaining" : "Time until trigger"}
+        </div>
+        <div className="mt-2 flex items-baseline justify-center gap-2">
+          <span
+            className={`text-4xl font-bold ${triggered ? "text-[var(--danger)]" : "text-[var(--text)]"}`}
+          >
+            {triggered ? vault.graceRemainingDays : vault.daysUntilTrigger}
+          </span>
+          <span className="text-sm text-[var(--text-muted)]">days</span>
+        </div>
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(241,241,241,0.08)]">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${elapsedPct}%`,
+              background: triggered ? "var(--danger)" : "var(--accent)",
+              boxShadow: triggered
+                ? "0 0 12px rgba(255,107,107,0.5)"
+                : "0 0 12px rgba(74,255,145,0.5)",
+            }}
+          />
         </div>
       </div>
       <div className="mt-4 text-center text-xs text-[var(--text-muted)]">
@@ -114,15 +157,23 @@ function BalanceCard() {
             <span className="text-xs font-medium text-[var(--text-muted)]">SOL</span>
           </div>
         </div>
-        <div className="rounded-[var(--r)] bg-[rgba(74,255,145,0.04)] border border-[rgba(74,255,145,0.12)] p-4">
-          <div className="flex items-center gap-2" style={{ color: vault.stakingEnabled ? "var(--accent)" : "var(--text-muted)" }}>
+        <div className="rounded-[var(--r)] bg-[rgba(74,255,145,0.04)] border border-[var(--accent-dim)] p-4">
+          <div
+            className="flex items-center gap-2"
+            style={{ color: vault.stakingEnabled ? "var(--accent)" : "var(--text-muted)" }}
+          >
             <TrendingUp className="h-4 w-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Yield</span>
           </div>
           <div className="mt-3 flex items-baseline gap-1.5">
             {vault.stakingEnabled ? (
               <>
-                <span className="text-2xl font-bold tabular-nums" style={{ color: "var(--accent)" }}>+{fmt(vault.yield)}</span>
+                <span
+                  className="text-2xl font-bold tabular-nums"
+                  style={{ color: "var(--accent)" }}
+                >
+                  +{fmt(vault.yield)}
+                </span>
                 <span className="text-xs font-medium text-[var(--text-muted)]">SOL</span>
               </>
             ) : (
@@ -132,15 +183,43 @@ function BalanceCard() {
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <PillButton fullWidth icon={<ArrowDownToLine className="h-4 w-4" />} onClick={() => setMode("deposit")}>Deposit</PillButton>
-        <PillButton fullWidth variant="secondary" icon={<ArrowUpFromLine className="h-4 w-4" />} onClick={() => setMode("withdraw")}>Withdraw</PillButton>
+        <PillButton
+          fullWidth
+          icon={<ArrowDownToLine className="h-4 w-4" />}
+          onClick={() => setMode("deposit")}
+        >
+          Deposit
+        </PillButton>
+        <PillButton
+          fullWidth
+          variant="secondary"
+          icon={<ArrowUpFromLine className="h-4 w-4" />}
+          onClick={() => setMode("withdraw")}
+        >
+          Withdraw
+        </PillButton>
       </div>
-      <AmountDialog mode={mode} onClose={() => setMode(null)} vaultBalance={vault.deposited} walletBalance={walletBalance} />
+      <AmountDialog
+        mode={mode}
+        onClose={() => setMode(null)}
+        vaultBalance={vault.deposited}
+        walletBalance={walletBalance}
+      />
     </GlassCard>
   );
 }
 
-function AmountDialog({ mode, onClose, vaultBalance, walletBalance }: { mode: null | "deposit" | "withdraw"; onClose: () => void; vaultBalance: number; walletBalance: number }) {
+function AmountDialog({
+  mode,
+  onClose,
+  vaultBalance,
+  walletBalance,
+}: {
+  mode: null | "deposit" | "withdraw";
+  onClose: () => void;
+  vaultBalance: number;
+  walletBalance: number;
+}) {
   const { deposit, withdraw, busy } = useVaultStore();
   const { program, owner, connection } = useChain();
   const [amount, setAmount] = useState("");
@@ -159,12 +238,24 @@ function AmountDialog({ mode, onClose, vaultBalance, walletBalance }: { mode: nu
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { setAmount(""); onClose(); } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) {
+          setAmount("");
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="bg-[var(--surface)] border-[var(--border)] text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
         <DialogHeader>
-          <DialogTitle className="card-title">{isDeposit ? "Deposit SOL" : "Withdraw SOL"}</DialogTitle>
+          <DialogTitle className="card-title">
+            {isDeposit ? "Deposit SOL" : "Withdraw SOL"}
+          </DialogTitle>
           <DialogDescription className="text-[var(--text-muted)]">
-            {isDeposit ? `Wallet balance: ${walletBalance.toFixed(2)} SOL` : `Vault balance: ${vaultBalance.toFixed(2)} SOL`}
+            {isDeposit
+              ? `Wallet balance: ${walletBalance.toFixed(2)} SOL`
+              : `Vault balance: ${vaultBalance.toFixed(2)} SOL`}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -172,17 +263,32 @@ function AmountDialog({ mode, onClose, vaultBalance, walletBalance }: { mode: nu
             <TextInput
               autoFocus
               type="number"
-              className="no-spin pr-14 text-lg text-center"
+              className="no-spin pr-24 text-lg text-center"
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)]">SOL</span>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAmount(String(max))}
+                className="text-[11px] font-semibold text-[var(--accent)] hover:underline"
+              >
+                MAX
+              </button>
+              <span className="text-sm text-[var(--text-muted)]">SOL</span>
+            </div>
           </div>
-          <button onClick={() => setAmount(String(max))} className="text-xs text-[var(--accent)] hover:underline">Use max</button>
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <PillButton fullWidth variant="secondary" onClick={onClose}>Cancel</PillButton>
-            <PillButton fullWidth disabled={invalid} loading={busy === (isDeposit ? "deposit" : "withdraw")} onClick={submit}>
+            <PillButton fullWidth variant="secondary" onClick={onClose}>
+              Cancel
+            </PillButton>
+            <PillButton
+              fullWidth
+              disabled={invalid}
+              loading={busy === (isDeposit ? "deposit" : "withdraw")}
+              onClick={submit}
+            >
               {isDeposit ? "Deposit" : "Withdraw"}
             </PillButton>
           </div>
@@ -200,7 +306,10 @@ function CloseVaultFooter() {
 
   return (
     <>
-      <div className="anim-fade-up mt-2 flex justify-center pb-4" style={{ animationDelay: "400ms" }}>
+      <div
+        className="anim-fade-up mt-2 flex justify-center pb-4"
+        style={{ animationDelay: "400ms" }}
+      >
         <button
           onClick={() => setConfirm(true)}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
@@ -218,12 +327,19 @@ function CloseVaultFooter() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <PillButton fullWidth variant="secondary" onClick={() => setConfirm(false)}>Cancel</PillButton>
+            <PillButton fullWidth variant="secondary" onClick={() => setConfirm(false)}>
+              Cancel
+            </PillButton>
             <PillButton
               fullWidth
               variant="danger"
               loading={busy === "close"}
-              onClick={async () => { if (program && owner) { await closeVault(program, owner); setConfirm(false); } }}
+              onClick={async () => {
+                if (program && owner) {
+                  await closeVault(program, owner);
+                  setConfirm(false);
+                }
+              }}
             >
               Close Vault
             </PillButton>
@@ -242,7 +358,10 @@ function BeneficiariesCard() {
 
   if (!vault) return null;
 
-  const startEdit = () => { setDraft(vault.beneficiaries.map((b) => ({ ...b }))); setEditing(true); };
+  const startEdit = () => {
+    setDraft(vault.beneficiaries.map((b) => ({ ...b })));
+    setEditing(true);
+  };
   const sum = draft.reduce((s, b) => s + (Number(b.percentage) || 0), 0);
   const valid = sum === 100 && draft.every((b) => b.address.length > 0);
 
@@ -251,7 +370,10 @@ function BeneficiariesCard() {
       <div className="flex items-center justify-between">
         <span className="card-title text-left">Beneficiaries</span>
         {!editing ? (
-          <button onClick={startEdit} className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+          <button
+            onClick={startEdit}
+            className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+          >
             <Pencil className="h-3 w-3" /> Edit
           </button>
         ) : (
@@ -263,11 +385,21 @@ function BeneficiariesCard() {
         <div className="mt-4 space-y-3">
           {vault.beneficiaries.map((b, i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-[var(--r)] bg-[var(--surface-2)] text-sm font-semibold" style={{ color: "var(--accent)" }}>
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-[var(--r)] bg-[var(--surface-2)] text-sm font-semibold"
+                style={{ color: "var(--accent)" }}
+              >
                 {i + 1}
               </div>
-              <span className="flex-1 font-mono text-sm text-[var(--text)]">{truncateAddr(b.address, 6, 6)}</span>
-              <span className="rounded-[var(--r)] bg-[var(--accent-dim)] px-2.5 py-0.5 text-xs font-semibold" style={{ color: "var(--accent)" }}>{b.percentage}%</span>
+              <span className="flex-1 font-mono text-sm text-[var(--text)]">
+                {truncateAddr(b.address, 6, 6)}
+              </span>
+              <span
+                className="rounded-[var(--r)] bg-[var(--accent-dim)] px-2.5 py-0.5 text-xs font-semibold"
+                style={{ color: "var(--accent)" }}
+              >
+                {b.percentage}%
+              </span>
             </div>
           ))}
         </div>
@@ -275,26 +407,58 @@ function BeneficiariesCard() {
         <div className="mt-4 space-y-2">
           {draft.map((b, i) => (
             <div key={i} className="flex items-center gap-2">
-              <TextInput placeholder="Address" value={b.address} onChange={(e) => setDraft((d) => d.map((x, j) => j === i ? { ...x, address: e.target.value } : x))} />
+              <TextInput
+                placeholder="Address"
+                value={b.address}
+                onChange={(e) =>
+                  setDraft((d) =>
+                    d.map((x, j) => (j === i ? { ...x, address: e.target.value } : x)),
+                  )
+                }
+              />
               <input
                 type="number"
                 value={b.percentage}
-                onChange={(e) => setDraft((d) => d.map((x, j) => j === i ? { ...x, percentage: Number(e.target.value) } : x))}
+                onChange={(e) =>
+                  setDraft((d) =>
+                    d.map((x, j) => (j === i ? { ...x, percentage: Number(e.target.value) } : x)),
+                  )
+                }
                 className="input-base no-spin w-20 text-center"
               />
-              <button onClick={() => setDraft((d) => d.filter((_, j) => j !== i))} className="text-[var(--text-muted)] hover:text-[var(--danger)]">
+              <button
+                onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}
+                className="text-[var(--text-muted)] hover:text-[var(--danger)]"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
           ))}
           {draft.length < 10 && (
-            <button onClick={() => setDraft((d) => [...d, { address: "", percentage: 0 }])} className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent)]">
+            <button
+              onClick={() => setDraft((d) => [...d, { address: "", percentage: 0 }])}
+              className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent)]"
+            >
               <Plus className="h-3 w-3" /> Add Beneficiary
             </button>
           )}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <PillButton fullWidth disabled={!valid} loading={busy === "beneficiaries"} onClick={async () => { if (program && owner) { await saveBeneficiaries(program, owner, draft, connection); setEditing(false); } }}>Save Changes</PillButton>
-            <PillButton fullWidth variant="secondary" onClick={() => setEditing(false)}>Cancel</PillButton>
+            <PillButton
+              fullWidth
+              disabled={!valid}
+              loading={busy === "beneficiaries"}
+              onClick={async () => {
+                if (program && owner) {
+                  await saveBeneficiaries(program, owner, draft, connection);
+                  setEditing(false);
+                }
+              }}
+            >
+              Save Changes
+            </PillButton>
+            <PillButton fullWidth variant="secondary" onClick={() => setEditing(false)}>
+              Cancel
+            </PillButton>
           </div>
         </div>
       )}
@@ -318,17 +482,22 @@ function SettingsCard() {
       setTgOpen(true);
     } else {
       if (vault.telegramChatId && wallet.signMessage && owner) {
-        disconnectTelegram(vault.telegramChatId, vault.address, wallet.signMessage, owner.toBase58());
+        disconnectTelegram(
+          vault.telegramChatId,
+          vault.address,
+          wallet.signMessage,
+          owner.toBase58(),
+        );
       }
     }
   };
 
   return (
     <GlassCard delay={320}>
-      <div className="card-title mb-3 text-left">Features</div>
+      <div className="card-title mb-4 text-left">Optional Features</div>
 
       {/* Watcher toggle */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between py-2">
         <span className="text-sm font-medium text-[var(--text)]">Activity Watcher</span>
         <div className="group relative flex items-center gap-2">
           <Info className="h-4 w-4 text-[var(--text-muted)]" />
@@ -343,10 +512,8 @@ function SettingsCard() {
         </div>
       </div>
 
-      <Divider />
-
       {/* Staking toggle */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between py-2">
         <span className="text-sm font-medium text-[var(--text)]">Staking</span>
         <div className="group relative flex items-center gap-2">
           <Info className="h-4 w-4 text-[var(--text-muted)]" />
@@ -361,10 +528,8 @@ function SettingsCard() {
         </div>
       </div>
 
-      <Divider />
-
       {/* Telegram toggle */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between py-2">
         <span className="text-sm font-medium text-[var(--text)]">Telegram Notifications</span>
         <div className="group relative flex items-center gap-2">
           <Info className="h-4 w-4 text-[var(--text-muted)]" />
@@ -401,16 +566,28 @@ function SettingsCard() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <TextInput autoFocus placeholder="e.g. 123456789" value={chatId} onChange={(e) => setChatId(e.target.value)} />
+            <TextInput
+              autoFocus
+              placeholder="e.g. 123456789"
+              value={chatId}
+              onChange={(e) => setChatId(e.target.value)}
+            />
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <PillButton fullWidth variant="secondary" onClick={() => setTgOpen(false)}>Cancel</PillButton>
+              <PillButton fullWidth variant="secondary" onClick={() => setTgOpen(false)}>
+                Cancel
+              </PillButton>
               <PillButton
                 fullWidth
                 disabled={!chatId || !wallet.signMessage || !owner}
                 loading={busy === "telegram"}
                 onClick={async () => {
                   if (chatId && wallet.signMessage && owner) {
-                    await connectTelegram(chatId, vault.address, wallet.signMessage, owner.toBase58());
+                    await connectTelegram(
+                      chatId,
+                      vault.address,
+                      wallet.signMessage,
+                      owner.toBase58(),
+                    );
                     setTgOpen(false);
                   }
                 }}

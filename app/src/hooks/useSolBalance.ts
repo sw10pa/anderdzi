@@ -8,7 +8,10 @@ export function useSolBalance() {
   const [balance, setBalance] = useState(0);
 
   useEffect(() => {
-    if (!publicKey) { setBalance(0); return; }
+    if (!publicKey) {
+      setBalance(0);
+      return;
+    }
     connection.getBalance(publicKey).then((b) => setBalance(b / LAMPORTS_PER_SOL));
   }, [connection, publicKey]);
 

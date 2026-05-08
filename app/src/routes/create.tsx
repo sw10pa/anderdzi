@@ -1,14 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Plus, Trash2, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Trash2, ChevronDown, Info } from "lucide-react";
 import { PublicKey } from "@solana/web3.js";
 import { useVaultStore } from "@/store/useVaultStore";
 import { useChain } from "@/hooks/useChain";
-import { GlassCard, PillButton, Slider, TextInput, Toggle, Divider } from "@/components/anderdzi/Primitives";
+import { useSolBalance } from "@/hooks/useSolBalance";
+import { GlassCard, PillButton, Slider, TextInput, Toggle } from "@/components/anderdzi/Primitives";
 import type { Beneficiary } from "@/lib/mock";
 
 function isValidPublicKey(address: string): boolean {
-  try { new PublicKey(address); return true; } catch { return false; }
+  try {
+    new PublicKey(address);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export const Route = createFileRoute("/create")({
@@ -16,46 +22,62 @@ export const Route = createFileRoute("/create")({
 });
 
 const MONTH = 30;
-const YEAR = 365;
 
 function CreatePage() {
   const navigate = useNavigate();
-  const { createVault, busy } = useVaultStore();
+  const { connected, createVault, busy } = useVaultStore();
   const { program, owner, connection } = useChain();
-  const [inactivityDays, setInactivityDays] = useState(YEAR);
-  const [graceDays, setGraceDays] = useState(7);
+  const walletBalance = useSolBalance();
+  const [inactivityDays, setInactivityDays] = useState(12 * MONTH);
+  const [graceDays, setGraceDays] = useState(14);
   const [deposit, setDeposit] = useState("");
   const [staking, setStaking] = useState(false);
   const [watcher, setWatcher] = useState(false);
   const [telegram, setTelegram] = useState(false);
   const [optionalOpen, setOptionalOpen] = useState(false);
-  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([{ address: "", percentage: 100 }]);
+  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([
+    { address: "", percentage: 100 },
+  ]);
+
+  useEffect(() => {
+    document.title = "Anderdzi";
+  }, []);
+
+  useEffect(() => {
+    if (!connected) navigate({ to: "/" });
+  }, [connected, navigate]);
 
   const sum = beneficiaries.reduce((s, b) => s + (Number(b.percentage) || 0), 0);
-  const valid = sum === 100 && beneficiaries.length >= 1 && beneficiaries.length <= 10 && beneficiaries.every((b) => isValidPublicKey(b.address));
+  const valid =
+    sum === 100 &&
+    beneficiaries.length >= 1 &&
+    beneficiaries.length <= 10 &&
+    beneficiaries.every((b) => isValidPublicKey(b.address));
 
   return (
     <div className="pt-2">
       <GlassCard>
         <h1 className="page-title text-left">Create Your Vault</h1>
-        <Divider />
 
-        <PeriodSlider
-          label="Inactivity Period"
-          value={inactivityDays}
-          onChange={setInactivityDays}
-          min={6 * MONTH}
-          max={10 * YEAR}
-          step={MONTH}
-          presets={[
-            { label: "6 months", value: 6 * MONTH },
-            { label: "1 year", value: YEAR },
-            { label: "2 years", value: 2 * YEAR },
-            { label: "5 years", value: 5 * YEAR },
-            { label: "10 years", value: 10 * YEAR },
-          ]}
-          formatValue={formatMonths}
-        />
+        <div className="mt-6">
+          <PeriodSlider
+            label="Inactivity Period"
+            value={inactivityDays}
+            onChange={setInactivityDays}
+            min={6 * MONTH}
+            max={120 * MONTH}
+            step={MONTH}
+            presets={[
+              { label: "6 months", value: 6 * MONTH },
+              { label: "1 year", value: 12 * MONTH },
+              { label: "2 years", value: 24 * MONTH },
+              { label: "5 years", value: 60 * MONTH },
+              { label: "10 years", value: 120 * MONTH },
+            ]}
+            formatValue={formatMonths}
+          />
+        </div>
+
         <PeriodSlider
           label="Grace Period"
           value={graceDays}
@@ -71,54 +93,34 @@ function CreatePage() {
           formatValue={(d) => `${d} days`}
         />
 
-        {/* Deposit */}
+        {/* Initial Deposit */}
         <div className="mb-6">
           <div className="mb-2 flex items-center justify-between">
             <span className="card-title text-left text-base">Initial Deposit</span>
           </div>
+          <p className="mb-2 text-xs text-[var(--text-muted)]">
+            Available: {walletBalance.toFixed(2)} SOL
+          </p>
           <div className="relative">
             <TextInput
               type="number"
               placeholder="0.00"
               value={deposit}
               onChange={(e) => setDeposit(e.target.value)}
-              className="no-spin pr-14"
+              className="no-spin pr-24"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--text-muted)]">SOL</span>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setDeposit(String(walletBalance))}
+                className="text-[11px] font-semibold text-[var(--accent)] hover:underline"
+              >
+                MAX
+              </button>
+              <span className="text-xs font-semibold text-[var(--text-muted)]">SOL</span>
+            </div>
           </div>
         </div>
-
-        {/* Optional features */}
-        <div className="mb-6 rounded-[var(--r)] border border-[var(--border)] bg-[rgba(15,57,50,0.4)]">
-          <button
-            type="button"
-            onClick={() => setOptionalOpen((o) => !o)}
-            className="flex w-full items-center justify-between px-4 py-3 text-left"
-          >
-            <span className="text-sm font-medium text-[var(--text)]">Optional features</span>
-            <ChevronDown className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${optionalOpen ? "rotate-180" : ""}`} />
-          </button>
-          {optionalOpen && (
-            <div className="px-4 pb-4">
-              <p className="mb-3 text-xs text-[var(--text-muted)]">Disabled by default — you can enable any of these later from your vault.</p>
-              {[
-                { label: "Staking", checked: staking, onChange: setStaking },
-                { label: "Activity Watcher", checked: watcher, onChange: setWatcher },
-                { label: "Telegram Notifications", checked: telegram, onChange: setTelegram },
-              ].map((row, i) => (
-                <div key={row.label}>
-                  {i > 0 && <Divider />}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-[var(--text)]">{row.label}</span>
-                    <Toggle checked={row.checked} onChange={row.onChange} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <Divider />
 
         {/* Beneficiaries */}
         <div className="mb-4 flex items-center justify-between">
@@ -129,30 +131,52 @@ function CreatePage() {
         <div className="space-y-2">
           {beneficiaries.map((b, i) => (
             <div key={i} className="flex items-center gap-2">
-              <TextInput placeholder="Beneficiary address" value={b.address} onChange={(e) => setBeneficiaries((d) => d.map((x, j) => j === i ? { ...x, address: e.target.value } : x))} />
+              <TextInput
+                placeholder="Beneficiary address"
+                value={b.address}
+                onChange={(e) =>
+                  setBeneficiaries((d) =>
+                    d.map((x, j) => (j === i ? { ...x, address: e.target.value } : x)),
+                  )
+                }
+              />
               <div className="relative">
                 <input
                   type="number"
+                  step="0.01"
                   value={b.percentage === 0 ? "" : b.percentage}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/^0+(?=\d)/, "");
+                    if (raw !== "" && raw.includes(".") && raw.split(".")[1]?.length > 2) return;
                     const n = raw === "" ? 0 : Number(raw);
-                    setBeneficiaries((d) => d.map((x, j) => j === i ? { ...x, percentage: n } : x));
+                    setBeneficiaries((d) =>
+                      d.map((x, j) => (j === i ? { ...x, percentage: n } : x)),
+                    );
                   }}
-                  className="input-base no-spin w-16 pr-5 text-center text-sm"
+                  className="input-base no-spin w-20 pr-5 text-center text-sm"
                 />
-                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">%</span>
+                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">
+                  %
+                </span>
               </div>
-              <button onClick={() => setBeneficiaries((d) => d.filter((_, j) => j !== i))} className="text-[var(--text-muted)] hover:text-[var(--danger)]">
-                <Trash2 className="h-4 w-4" />
-              </button>
+              {beneficiaries.length > 1 && (
+                <button
+                  onClick={() => setBeneficiaries((d) => d.filter((_, j) => j !== i))}
+                  className="text-[var(--text-muted)] hover:text-[var(--danger)]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </div>
           ))}
           {beneficiaries.length < 10 && (
             <button
               onClick={() =>
                 setBeneficiaries((d) => {
-                  const remaining = Math.max(0, 100 - d.reduce((s, b) => s + (Number(b.percentage) || 0), 0));
+                  const remaining = Math.max(
+                    0,
+                    100 - d.reduce((s, b) => s + (Number(b.percentage) || 0), 0),
+                  );
                   return [...d, { address: "", percentage: remaining }];
                 })
               }
@@ -160,6 +184,58 @@ function CreatePage() {
             >
               <Plus className="h-3 w-3" /> Add another
             </button>
+          )}
+        </div>
+
+        {/* Optional Features */}
+        <div className="mt-6 mb-6">
+          <button
+            type="button"
+            onClick={() => setOptionalOpen((o) => !o)}
+            className="flex w-full items-center justify-between text-left"
+          >
+            <span className="card-title text-left text-base">Optional Features</span>
+            <ChevronDown
+              className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${optionalOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {optionalOpen && (
+            <div className="mt-3">
+              <p className="mb-3 text-xs text-[var(--text-muted)]">
+                You can enable any of these later from your vault.
+              </p>
+              {[
+                {
+                  label: "Staking",
+                  checked: staking,
+                  onChange: setStaking,
+                  tooltip: "Earn yield via Marinade liquid staking.",
+                },
+                {
+                  label: "Activity Watcher",
+                  checked: watcher,
+                  onChange: setWatcher,
+                  tooltip: "Monitors on-chain activity automatically.",
+                },
+                {
+                  label: "Telegram Notifications",
+                  checked: telegram,
+                  onChange: setTelegram,
+                  tooltip: "Get notified before trigger and on key events.",
+                },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium text-[var(--text)]">{row.label}</span>
+                  <div className="group relative flex items-center gap-2">
+                    <Info className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                      {row.tooltip}
+                    </span>
+                    <Toggle checked={row.checked} onChange={row.onChange} />
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
@@ -190,26 +266,57 @@ function CreatePage() {
 }
 
 function formatMonths(days: number): string {
-  const months = Math.round(days / MONTH);
-  if (months % 12 === 0) {
-    const years = months / 12;
-    return years === 1 ? "1 year" : `${years} years`;
+  const totalMonths = Math.round(days / MONTH);
+  if (totalMonths <= 11) {
+    return totalMonths === 1 ? "1 month" : `${totalMonths} months`;
   }
-  return months === 1 ? "1 month" : `${months} months`;
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  const yearStr = years === 1 ? "1 year" : `${years} years`;
+  if (months === 0) return yearStr;
+  const monthStr = months === 1 ? "1 month" : `${months} months`;
+  return `${yearStr} and ${monthStr}`;
 }
 
 type Preset = { label: string; value: number };
 
-function PeriodSlider({ label, value, onChange, min, max, step = 1, presets, formatValue }: { label: string; value: number; onChange: (n: number) => void; min: number; max: number; step?: number; presets: Preset[]; formatValue: (d: number) => string }) {
+function PeriodSlider({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  presets,
+  formatValue,
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  presets: Preset[];
+  formatValue: (d: number) => string;
+}) {
   return (
     <div className="mb-6">
       <div className="mb-2 flex items-center justify-between">
         <span className="card-title text-left text-base">{label}</span>
-        <span className="text-base font-semibold text-[var(--accent)]" style={{ fontFamily: "Space Grotesk, sans-serif", letterSpacing: "-0.02em" }}>
+        <span
+          className="text-base font-semibold text-[var(--accent)]"
+          style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}
+        >
           {formatValue(value)}
         </span>
       </div>
-      <Slider value={value} onChange={(v) => onChange(Math.min(max, Math.max(min, v)))} min={min} max={max} step={step} />
+      <Slider
+        value={value}
+        onChange={(v) => onChange(Math.min(max, Math.max(min, v)))}
+        min={min}
+        max={max}
+        step={step}
+      />
       <div className="mt-2 flex flex-wrap gap-1.5">
         {presets.map((p) => {
           const active = value === p.value;
@@ -241,7 +348,11 @@ export function PercentBadge({ sum }: { sum: number }) {
     <span
       className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
       style={{
-        background: ok ? "var(--accent-dim)" : over ? "rgba(255,107,107,0.12)" : "rgba(241,241,241,0.06)",
+        background: ok
+          ? "var(--accent-dim)"
+          : over
+            ? "rgba(255,107,107,0.12)"
+            : "rgba(241,241,241,0.06)",
         color: ok ? "var(--accent)" : over ? "var(--danger)" : "var(--text-muted)",
       }}
     >

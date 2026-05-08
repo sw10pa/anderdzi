@@ -1,6 +1,14 @@
 import logoUrl from "@/assets/logo.png";
 
-export function Logo({ size = 32, withText = false, className = "" }: { size?: number; withText?: boolean; className?: string }) {
+export function Logo({
+  size = 32,
+  withText = false,
+  className = "",
+}: {
+  size?: number;
+  withText?: boolean;
+  className?: string;
+}) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <img
@@ -17,7 +25,14 @@ export function Logo({ size = 32, withText = false, className = "" }: { size?: n
         }}
       />
       {withText && (
-        <span className="font-semibold tracking-tight" style={{ fontFamily: "Space Grotesk, sans-serif", letterSpacing: "-0.02em", fontSize: Math.max(14, Math.round(size * 0.5)) }}>
+        <span
+          className="font-semibold tracking-tight"
+          style={{
+            fontFamily: "Space Grotesk, sans-serif",
+            letterSpacing: "-0.02em",
+            fontSize: Math.max(14, Math.round(size * 0.5)),
+          }}
+        >
           Anderdzi
         </span>
       )}

@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, Link, createRootRouteWithContext } from "@tanstack/react-router";
+import { Outlet, Link, createRootRouteWithContext, useLocation } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { Navbar } from "@/components/anderdzi/Navbar";
+import { Footer } from "@/components/anderdzi/Footer";
 import { WalletProvider } from "@/providers/WalletProvider";
 import { useWalletSync } from "@/hooks/useWalletSync";
 
@@ -39,25 +40,31 @@ function WalletSync() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { pathname } = useLocation();
+  const isLanding = pathname === "/";
 
   return (
     <QueryClientProvider client={queryClient}>
       <WalletProvider>
         <WalletSync />
-        <div className="min-h-screen">
+        <div className="flex min-h-screen flex-col">
           <Navbar />
-          <main className="mx-auto w-full max-w-[520px] px-4 pb-24">
+          <main className={`mx-auto w-full ${isLanding ? "" : "max-w-[900px]"} flex-1 px-4`}>
             <Outlet />
           </main>
+          {!isLanding && <Footer />}
           <Toaster
             position="bottom-right"
             toastOptions={{
               style: {
-                background: "rgba(31, 69, 60, 0.95)",
-                border: "1px solid rgba(241,241,241,0.08)",
-                color: "#F1F1F1",
-                borderRadius: "12px",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+                borderRadius: "var(--r)",
                 backdropFilter: "blur(20px)",
+              },
+              classNames: {
+                description: "!text-[var(--text-muted)]",
               },
             }}
           />

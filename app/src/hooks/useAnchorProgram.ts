@@ -15,8 +15,8 @@ export function useAnchorProgram() {
 
     const provider = new AnchorProvider(
       connection,
-      wallet as Parameters<typeof AnchorProvider>[1],
-      { commitment: "confirmed" }
+      wallet as ConstructorParameters<typeof AnchorProvider>[1],
+      { commitment: "confirmed" },
     );
 
     return new Program<Anderdzi>(idl as Anderdzi, provider);

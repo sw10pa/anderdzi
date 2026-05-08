@@ -43,7 +43,7 @@ anderdzi/
 │       ├── notifier.rs    # Telegram notification sender
 │       ├── api.rs         # HTTP API for registration
 │       └── db.rs          # SQLite storage
-├── app/                   # React frontend (TypeScript)
+├── app/                   # React frontend (Vite + React + TypeScript + Tailwind)
 ├── Anchor.toml
 └── Cargo.toml
 ```
@@ -56,7 +56,7 @@ anderdzi/
 | -------------------- | ------------------------------------- |
 | Smart contract       | Anchor 0.32, Rust                     |
 | Bot (executor/watcher/notifier) | Rust, solana-client, axum, rusqlite   |
-| Frontend             | React, TypeScript, Vite, Tailwind CSS |
+| Frontend             | React 18, TypeScript, Vite, Tailwind CSS v4, Zustand, TanStack Router |
 | Wallet connection    | Solana Wallet Adapter                 |
 | Yield                | Marinade Finance                      |
 
@@ -69,14 +69,14 @@ anderdzi/
 - Rust 1.75+
 - Anchor CLI 0.32.1
 - Solana CLI 1.18+
-- Node.js 18+ and Yarn
+- Node.js 18+ and npm
 
 ### Setup
 
 ```bash
 git clone https://github.com/sw10pa/anderdzi
 cd anderdzi
-yarn install       # Anchor test dependencies
+npm install        # Anchor test dependencies
 cd app && npm install  # Frontend dependencies
 ```
 
@@ -106,7 +106,10 @@ cargo run --bin anderdzi-bot
 ### Run the frontend
 
 ```bash
-cd app && npm run dev
+cd app
+cp .env.example .env       # set VITE_RPC_URL and VITE_BOT_API_URL
+npm install
+npm run dev                 # opens at http://localhost:5173
 ```
 
 ---

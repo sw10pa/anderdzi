@@ -13,5 +13,6 @@ export function useWalletSync() {
     } else {
       disconnect();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, publicKey]);
 }
