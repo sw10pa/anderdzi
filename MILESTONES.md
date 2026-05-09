@@ -147,18 +147,18 @@ _Goal: functional web dApp covering all vault operations_
 
 ---
 
-## Milestone 9 — Deploy & Polish
+## Milestone 9 — Deploy & Polish ✅
 
 _Goal: live on devnet, demo-ready, Colosseum submission_
 
-- [ ] Deploy program to devnet; update program ID across `Anchor.toml`, IDL, and frontend config
-- [ ] Initialize treasury on devnet (set authority, default watcher)
+- [x] Deploy program to devnet (`HqAguZH2aj1sSc4Zi6Ck1MBV1bpz1z4cyZUnYT3bTztN`); program ID updated across `Anchor.toml`, IDL, and frontend config
+- [x] Initialize treasury on devnet (set authority)
+- [x] Deploy frontend to Vercel — live at [anderdzi.xyz](https://anderdzi.xyz)
+- [x] Frontend connected to devnet with correct program ID and RPC
 - [ ] Create treasury mSOL ATA on devnet (required for yield harvest)
-- [ ] Deploy frontend to a public URL (Vercel / Cloudflare Pages)
 - [ ] Bot deployed and running against devnet (executor + watcher + notifier)
 - [ ] Configure bot environment — `PROGRAM_ID`, RPC/WS URLs, treasury keypair, Telegram token, CORS for frontend ↔ bot API
 - [ ] Fund executor/watcher service wallets with devnet SOL
-- [ ] Frontend connected to devnet with correct program ID and RPC
 - [ ] End-to-end devnet test: create vault → deposit → enable staking → wait → trigger → distribute → verify beneficiary balances
 - [ ] Bot smoke test: watcher detects activity, executor triggers/distributes, notifier sends Telegram DM
 - [ ] Marinade integration verified on devnet (deposit stakes, withdraw unstakes, yield accrues)

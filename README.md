@@ -2,11 +2,14 @@
 
 > _Anderdzi (ანდერძი) is the Georgian word for testament — a final declaration of your wishes, meant to outlast you. We built this because self-custody shouldn't end when you do._
 
+**Live on Solana Devnet:** [anderdzi.xyz](https://anderdzi.xyz)
+**Program ID:** `HqAguZH2aj1sSc4Zi6Ck1MBV1bpz1z4cyZUnYT3bTztN`
+
 ---
 
 ## What is Anderdzi?
 
-Anderdzi is a self-custody inheritance protocol on Solana. Deposit SOL and SPL tokens into a secure vault, designate beneficiaries with percentage splits, and set an inactivity period. If you stop using crypto and miss your reminders, the vault automatically distributes your assets to your heirs.
+Anderdzi is a self-custody inheritance protocol on Solana. Deposit SOL into a secure vault, designate beneficiaries with percentage splits, and set an inactivity period. If you stop using crypto and miss your reminders, the vault automatically distributes your assets to your heirs.
 
 Your assets earn yield while they wait. As long as you're using Solana normally, Anderdzi stays completely silent.
 
@@ -59,6 +62,7 @@ anderdzi/
 | Frontend             | React 18, TypeScript, Vite, Tailwind CSS v4, Zustand, TanStack Router |
 | Wallet connection    | Solana Wallet Adapter                 |
 | Yield                | Marinade Finance                      |
+| Hosting              | Vercel (frontend), Solana Devnet (program) |
 
 ---
 
@@ -103,7 +107,7 @@ cp bot/.env.example bot/.env
 cargo run --bin anderdzi-bot
 ```
 
-### Run the frontend
+### Run the frontend locally
 
 ```bash
 cd app
@@ -111,6 +115,8 @@ cp .env.example .env       # set VITE_RPC_URL and VITE_BOT_API_URL
 npm install
 npm run dev                 # opens at http://localhost:5173
 ```
+
+Or visit the live deployment at [anderdzi.xyz](https://anderdzi.xyz).
 
 ---
 
