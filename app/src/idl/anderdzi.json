@@ -296,7 +296,8 @@
         },
         {
           "name": "vault_msol_ata",
-          "writable": true
+          "writable": true,
+          "optional": true
         },
         {
           "name": "system_program",

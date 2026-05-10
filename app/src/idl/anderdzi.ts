@@ -302,7 +302,8 @@ export type Anderdzi = {
         },
         {
           "name": "vaultMsolAta",
-          "writable": true
+          "writable": true,
+          "optional": true
         },
         {
           "name": "systemProgram",

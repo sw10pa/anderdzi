@@ -20,7 +20,7 @@ pub struct DisableStaking<'info> {
         token::authority = vault,
         token::mint = marinade::MSOL_MINT,
     )]
-    pub vault_msol_ata: Account<'info, TokenAccount>,
+    pub vault_msol_ata: Option<Account<'info, TokenAccount>>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -37,42 +37,46 @@ pub fn handler<'info>(ctx: Context<'_, '_, '_, 'info, DisableStaking<'info>>) ->
     let vault_bump = ctx.accounts.vault.bump;
     let vault_seeds: &[&[u8]] = &[b"vault", owner_key.as_ref(), &[vault_bump]];
 
-    let msol_balance = ctx.accounts.vault_msol_ata.amount;
-
-    if msol_balance > 0 {
-        let marinade_accounts = marinade::MarinadeUnstakeAccounts::parse(
-            ctx.remaining_accounts,
-            &ctx.accounts.vault.key(),
-        )?;
-
-        // Harvest protocol's yield share before unstaking (mandatory)
-        require!(
-            ctx.remaining_accounts.len() >= 10,
-            AnderdziError::InvalidMarinadeAccounts
-        );
-        marinade::auto_harvest_yield(
-            marinade_accounts.vault_msol_ata,
-            &ctx.remaining_accounts[9],
-            marinade_accounts.marinade_state,
-            marinade_accounts.token_program,
-            &ctx.accounts.vault.to_account_info(),
-            ctx.accounts.vault.total_deposited,
-            vault_seeds,
-        )?;
-
-        // Reload mSOL balance after harvest (CPI may have changed it)
-        ctx.accounts.vault_msol_ata.reload()?;
-        let msol_balance = ctx.accounts.vault_msol_ata.amount;
+    if let Some(vault_msol_ata) = &ctx.accounts.vault_msol_ata {
+        let msol_balance = vault_msol_ata.amount;
 
         if msol_balance > 0 {
-            // Unstake back to vault PDA (not owner) to keep funds in the vault
-            marinade::unstake_via_remaining(
-                &marinade_accounts,
+            let marinade_accounts = marinade::MarinadeUnstakeAccounts::parse(
+                ctx.remaining_accounts,
+                &ctx.accounts.vault.key(),
+            )?;
+
+            // Harvest protocol's yield share before unstaking (mandatory)
+            require!(
+                ctx.remaining_accounts.len() >= 10,
+                AnderdziError::InvalidMarinadeAccounts
+            );
+            marinade::auto_harvest_yield(
+                marinade_accounts.vault_msol_ata,
+                &ctx.remaining_accounts[9],
+                marinade_accounts.marinade_state,
+                marinade_accounts.token_program,
                 &ctx.accounts.vault.to_account_info(),
-                &ctx.accounts.vault.to_account_info(),
-                msol_balance,
+                ctx.accounts.vault.total_deposited,
                 vault_seeds,
             )?;
+
+            // Reload mSOL balance after harvest (CPI may have changed it)
+            ctx.accounts.vault_msol_ata.as_ref().unwrap().to_account_info();
+            let vault_msol_ata_info = ctx.accounts.vault_msol_ata.as_mut().unwrap();
+            vault_msol_ata_info.reload()?;
+            let msol_balance = vault_msol_ata_info.amount;
+
+            if msol_balance > 0 {
+                // Unstake back to vault PDA (not owner) to keep funds in the vault
+                marinade::unstake_via_remaining(
+                    &marinade_accounts,
+                    &ctx.accounts.vault.to_account_info(),
+                    &ctx.accounts.vault.to_account_info(),
+                    msol_balance,
+                    vault_seeds,
+                )?;
+            }
         }
     }
 
