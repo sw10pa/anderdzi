@@ -115,7 +115,7 @@ function Index() {
             clipPath: splashing && phase === "spin" ? "inset(0 0 33% 0)" : "inset(0 0 0% 0)",
             animation:
               splashing && phase === "spin" ? "splashSpin 1.8s ease-in-out forwards" : "none",
-            transform: phase !== "spin" ? "rotate(360deg)" : undefined,
+            transform: phase === "reveal" || phase === "settle" ? "rotate(360deg)" : undefined,
             transformOrigin: "51.5% 51%",
             transition: phase !== "spin" ? "clip-path 0.8s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
           }}
@@ -125,11 +125,17 @@ function Index() {
 
         <div
           className="splash-content flex flex-col items-center"
-          style={{
-            opacity: splashing && phase !== "settle" ? 0 : 1,
-            transform: splashing && phase !== "settle" ? "translateY(20px)" : "none",
-            transition: "opacity 1.2s ease, transform 1.2s ease",
-          }}
+          style={
+            splashing && phase !== "settle"
+              ? {
+                  opacity: 0,
+                  transform: "translateY(20px)",
+                  transition: "opacity 1.2s ease, transform 1.2s ease",
+                }
+              : {
+                  transition: "opacity 1.2s ease, transform 1.2s ease",
+                }
+          }
         >
           {/* 2) Buttons — closer to logo */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
