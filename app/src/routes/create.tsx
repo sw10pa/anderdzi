@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Trash2, ChevronDown, Info } from "lucide-react";
 import { PublicKey } from "@solana/web3.js";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useVaultStore } from "@/store/useVaultStore";
 import { useChain } from "@/hooks/useChain";
 import { useSolBalance } from "@/hooks/useSolBalance";
@@ -25,6 +26,7 @@ const MONTH = 30;
 
 function CreatePage() {
   const navigate = useNavigate();
+  const { connecting } = useWallet();
   const { connected, createVault, busy } = useVaultStore();
   const { program, owner, connection } = useChain();
   const walletBalance = useSolBalance();
@@ -44,8 +46,8 @@ function CreatePage() {
   }, []);
 
   useEffect(() => {
-    if (!connected) navigate({ to: "/" });
-  }, [connected, navigate]);
+    if (!connecting && !connected) navigate({ to: "/" });
+  }, [connected, connecting, navigate]);
 
   const sum = beneficiaries.reduce((s, b) => s + (Number(b.percentage) || 0), 0);
   const valid =

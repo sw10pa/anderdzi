@@ -132,5 +132,8 @@ export async function disableStaking(
   owner: PublicKey,
 ): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods.disableStaking().accountsPartial({ vault: vaultPda, owner }).rpc();
+  return program.methods
+    .disableStaking()
+    .accountsPartial({ vault: vaultPda, owner, vaultMsolAta: null })
+    .rpc();
 }
