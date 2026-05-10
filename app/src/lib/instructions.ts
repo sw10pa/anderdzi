@@ -1,4 +1,4 @@
-import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
 import { BN, Program } from "@coral-xyz/anchor";
 import type { Anderdzi } from "@/idl/anderdzi";
 import { deriveVaultPda } from "./accounts";
@@ -121,7 +121,10 @@ export async function optOutWatcher(program: Program<Anderdzi>, owner: PublicKey
 
 export async function enableStaking(program: Program<Anderdzi>, owner: PublicKey): Promise<string> {
   const vaultPda = deriveVaultPda(owner);
-  return program.methods.enableStaking().accountsPartial({ vault: vaultPda, owner }).rpc();
+  return program.methods
+    .enableStaking()
+    .accountsPartial({ vault: vaultPda, owner, systemProgram: SystemProgram.programId })
+    .rpc();
 }
 
 export async function disableStaking(
