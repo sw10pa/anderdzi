@@ -127,7 +127,7 @@ function Index() {
           className="splash-content flex flex-col items-center"
           style={{
             opacity: splashing && phase !== "settle" ? 0 : 1,
-            transform: splashing && phase !== "settle" ? "translateY(20px)" : "translateY(0)",
+            transform: splashing && phase !== "settle" ? "translateY(20px)" : "none",
             transition: "opacity 1.2s ease, transform 1.2s ease",
           }}
         >
