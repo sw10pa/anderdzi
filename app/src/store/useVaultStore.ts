@@ -166,12 +166,6 @@ export const useVaultStore = create<State & Actions>((set, get) => ({
         val ? ix.optInWatcher(program, owner) : ix.optOutWatcher(program, owner),
       );
     } else {
-      if (!STAKING_ENABLED) {
-        const v = get().vault;
-        if (v) set({ vault: { ...v, stakingEnabled: val } });
-        toast.success(`Staking ${val ? "enabled" : "disabled"}`);
-        return;
-      }
       await runTx(label, key, set, () =>
         val ? ix.enableStaking(program, owner) : ix.disableStaking(program, owner),
       );
