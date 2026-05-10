@@ -44,7 +44,7 @@ export function PillButton({
     primary:
       "bg-[var(--accent)] text-[#0F3932] hover:brightness-110 hover:shadow-[0_0_24px_rgba(74,255,145,0.4)]",
     secondary:
-      "border border-[var(--text)] text-[var(--text)] hover:border-[var(--text)] backdrop-blur-[60px] bg-[linear-gradient(135deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0.12)_100%)] hover:bg-[linear-gradient(135deg,rgba(255,255,255,0.22)_0%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.18)_100%)]",
+      "glass-card !border !border-[var(--text)] text-[var(--text)] hover:brightness-110 hover:shadow-[0_0_24px_rgba(74,255,145,0.4)]",
     danger:
       "border border-[var(--danger)] text-[var(--danger)] bg-transparent hover:bg-[rgba(255,107,107,0.15)]",
   };

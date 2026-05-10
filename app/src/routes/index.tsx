@@ -88,7 +88,7 @@ function Index() {
         }}
       >
         <div
-          className="glass-nav flex flex-col items-center gap-1.5 px-5 py-2.5"
+          className="flex flex-col items-center gap-1.5 px-5 py-2.5 backdrop-blur-[60px] bg-[linear-gradient(135deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0.12)_100%)]"
           style={{ borderRadius: "var(--r)" }}
         >
           <img
