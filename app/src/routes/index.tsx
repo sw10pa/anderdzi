@@ -69,8 +69,12 @@ function Index() {
         <img
           src="/background-grid.png"
           alt=""
-          className="w-full object-contain object-bottom absolute bottom-0 left-0"
-          style={{ opacity: 0.7 }}
+          className="w-full object-contain object-bottom absolute bottom-0 left-0 mix-blend-screen"
+          style={{
+            opacity: splashing && phase !== "settle" ? 0 : 1,
+            filter: "brightness(1.5) saturate(1.5)",
+            transition: "opacity 1.2s ease",
+          }}
         />
       </div>
 
@@ -161,7 +165,7 @@ function Index() {
             className="mt-10 text-center text-2xl font-thin tracking-tight text-[var(--text)] sm:text-3xl"
             style={{ fontFamily: '"Normalidad Text", sans-serif', letterSpacing: "-0.01em" }}
           >
-            Your Assets. Your Will.
+            Your Crypto. Your Will.
           </p>
         </div>
       </div>

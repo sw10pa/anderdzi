@@ -13,9 +13,9 @@ export function useSplash() {
       setPhase("done");
       return;
     }
-    const t1 = setTimeout(() => setPhase("reveal"), 2500);
-    const t2 = setTimeout(() => setPhase("settle"), 3200);
-    const t3 = setTimeout(() => setPhase("done"), 3900);
+    const t1 = setTimeout(() => setPhase("reveal"), 2200);
+    const t2 = setTimeout(() => setPhase("settle"), 2700);
+    const t3 = setTimeout(() => setPhase("done"), 3200);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
