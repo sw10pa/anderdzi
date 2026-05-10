@@ -187,59 +187,7 @@ function CreatePage() {
           )}
         </div>
 
-        {/* Optional Features */}
-        <div className="mt-6 mb-6">
-          <button
-            type="button"
-            onClick={() => setOptionalOpen((o) => !o)}
-            className="flex w-full items-center justify-between text-left"
-          >
-            <span className="card-title text-left text-base">Optional Features</span>
-            <ChevronDown
-              className={`h-4 w-4 text-[var(--text-muted)] transition-transform ${optionalOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-          {optionalOpen && (
-            <div className="mt-3">
-              <p className="mb-3 text-xs text-[var(--text-muted)]">
-                You can enable any of these later from your vault.
-              </p>
-              {[
-                {
-                  label: "Staking",
-                  checked: staking,
-                  onChange: setStaking,
-                  tooltip: "Earn yield via Marinade liquid staking.",
-                },
-                {
-                  label: "Activity Watcher",
-                  checked: watcher,
-                  onChange: setWatcher,
-                  tooltip: "Monitors on-chain activity automatically.",
-                },
-                {
-                  label: "Telegram Notifications",
-                  checked: telegram,
-                  onChange: setTelegram,
-                  tooltip: "Get notified before trigger and on key events.",
-                },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[var(--text)]">{row.label}</span>
-                    <div className="group relative flex items-center">
-                      <Info className="h-4 w-4 text-[var(--text-muted)]" />
-                      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-md glass-nav px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
-                        {row.tooltip}
-                      </span>
-                    </div>
-                  </div>
-                  <Toggle checked={row.checked} onChange={row.onChange} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Optional Features — available from vault dashboard after creation */}
 
         <div className="mt-6">
           <PillButton
