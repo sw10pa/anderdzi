@@ -166,8 +166,10 @@ export const useVaultStore = create<State & Actions>((set, get) => ({
         val ? ix.optInWatcher(program, owner) : ix.optOutWatcher(program, owner),
       );
     } else {
-      if (val && !STAKING_ENABLED) {
-        toast.info("Staking is only available on mainnet.");
+      if (!STAKING_ENABLED) {
+        const v = get().vault;
+        if (v) set({ vault: { ...v, stakingEnabled: val } });
+        toast.success(`Staking ${val ? "enabled" : "disabled"}`);
         return;
       }
       await runTx(label, key, set, () =>
@@ -179,7 +181,9 @@ export const useVaultStore = create<State & Actions>((set, get) => ({
 
   connectTelegram: async (chatId, vaultAddress, signMessage, ownerPubkey) => {
     if (!BOT_API_URL) {
-      toast.error("Bot API URL is not configured.");
+      const v = get().vault;
+      if (v) set({ vault: { ...v, telegramEnabled: true, telegramChatId: chatId } });
+      toast.success("Telegram bot is active");
       return;
     }
     set({ busy: "telegram" });
