@@ -28,7 +28,7 @@ export function Logo({
         <span
           className="font-semibold tracking-tight"
           style={{
-            fontFamily: "Space Grotesk, sans-serif",
+            fontFamily: "Normalidad Compact, sans-serif",
             letterSpacing: "-0.02em",
             fontSize: Math.max(14, Math.round(size * 0.5)),
           }}

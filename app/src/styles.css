@@ -3,8 +3,31 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/* Normalidad Compact */
+@font-face { font-family: "Normalidad Compact"; src: url("./assets/fonts/NormalidadCompact-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+@font-face { font-family: "Normalidad Compact"; src: url("./assets/fonts/NormalidadCompact-Light.woff2") format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Normalidad Compact"; src: url("./assets/fonts/NormalidadCompact-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Normalidad Compact"; src: url("./assets/fonts/NormalidadCompact-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Normalidad Compact"; src: url("./assets/fonts/NormalidadCompact-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Normalidad Compact"; src: url("./assets/fonts/NormalidadCompact-Black.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
 
-@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap");
+/* Normalidad Text */
+@font-face { font-family: "Normalidad Text"; src: url("./assets/fonts/NormalidadText-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+
+/* Normalidad Wide */
+@font-face { font-family: "Normalidad Wide"; src: url("./assets/fonts/NormalidadWide-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+
+/* Normalidad Extended */
+@font-face { font-family: "Normalidad Extended"; src: url("./assets/fonts/NormalidadExtended-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+
+/* Normalidad Ultra Extended */
+@font-face { font-family: "Normalidad Ultra Extended"; src: url("./assets/fonts/NormalidadUltraExtended-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+
+/* Normalidad Variable */
+@font-face { font-family: "Normalidad Variable"; src: url("./assets/fonts/NormalidadVar-Regular.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+
+
 
 /*
  * Design system definition.
@@ -69,8 +92,8 @@
   --color-accent: var(--accent);
   --color-accent-dim: var(--accent-dim);
   --color-danger: var(--danger);
-  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Normalidad Compact", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Normalidad Compact", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -163,7 +186,7 @@
   body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: "Figtree", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Normalidad Compact", ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   h1,
@@ -173,7 +196,7 @@
   .card-title,
   .page-title,
   .section-header {
-    font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Normalidad Compact", ui-sans-serif, system-ui, sans-serif;
     letter-spacing: -0.025em;
     font-weight: 600;
   }
@@ -239,7 +262,7 @@
     border-radius: var(--r);
     color: var(--text);
     padding: 0.625rem 0.875rem;
-    font-family: "Figtree", sans-serif;
+    font-family: "Normalidad Compact", sans-serif;
     transition: all 200ms ease;
     width: 100%;
     outline: none;
