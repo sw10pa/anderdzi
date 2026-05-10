@@ -15,12 +15,12 @@ export function MockSwitcher() {
     <div className="fixed bottom-4 left-4 z-50">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="pill flex items-center gap-2 border border-[var(--border)] bg-[rgba(15,57,50,0.85)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] backdrop-blur"
+        className="pill flex items-center gap-2 border border-[var(--border)] glass-nav px-3 py-1.5 text-xs font-semibold text-[var(--text)]"
       >
         Mock: {vaultState} <ChevronDown className="h-3 w-3" />
       </button>
       {open && (
-        <div className="mt-2 flex flex-col gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-xl">
+        <div className="mt-2 flex flex-col gap-1 rounded-xl glass-dialog p-2 shadow-xl">
           {STATES.map((s) => (
             <button
               key={s}
@@ -31,7 +31,7 @@ export function MockSwitcher() {
                 else if (s === "NO_VAULT") navigate({ to: "/create" });
                 else navigate({ to: "/dashboard" });
               }}
-              className="rounded-lg px-3 py-1.5 text-left text-xs hover:bg-[var(--surface-2)] text-[var(--text)]"
+              className="rounded-lg px-3 py-1.5 text-left text-xs text-[var(--text)] hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(74,255,145,0.2)] transition-all duration-200"
             >
               {s}
             </button>

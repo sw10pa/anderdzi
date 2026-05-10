@@ -1,6 +1,38 @@
+const TelegramIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="h-4 w-4"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M21.2 4.4 2.4 10.8c-.6.2-.6 1.1 0 1.3l4.6 1.5 2 6.2c.2.5.8.7 1.2.4l2.8-2.2 4.5 3.3c.5.4 1.2.1 1.3-.5L22.6 5.3c.2-.7-.5-1.2-1.1-1z" />
+    <path d="m9 13.5 9.5-7" />
+  </svg>
+);
+
 const XIcon = () => (
   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
     <path d="M18.244 2H21l-6.52 7.45L22 22h-6.797l-4.77-6.231L4.8 22H2.04l6.974-7.97L2 2h6.914l4.31 5.7L18.244 2zm-1.19 18h1.652L7.05 4H5.27l11.784 16z" />
+  </svg>
+);
+
+const MailIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="h-4 w-4"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="2" y="4" width="20" height="16" rx="2" />
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
   </svg>
 );
 
@@ -15,11 +47,27 @@ export function Footer() {
     <footer className="flex w-full flex-col items-center gap-3 py-6">
       <div className="flex items-center gap-2">
         <a
+          href="mailto:anderdzi.info@gmail.com"
+          aria-label="Email"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--r)] glass-inner text-[var(--text)] transition-colors hover:text-[var(--accent)]"
+        >
+          <MailIcon />
+        </a>
+        <a
+          href="https://t.me/sw10pa"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Telegram"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--r)] glass-inner text-[var(--text)] transition-colors hover:text-[var(--accent)]"
+        >
+          <TelegramIcon />
+        </a>
+        <a
           href="https://x.com/anderdzi"
           target="_blank"
           rel="noreferrer"
           aria-label="X"
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--r)] bg-[var(--surface-2)] text-[var(--text)] transition-colors hover:text-[var(--accent)]"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--r)] glass-inner text-[var(--text)] transition-colors hover:text-[var(--accent)]"
         >
           <XIcon />
         </a>
@@ -28,7 +76,7 @@ export function Footer() {
           target="_blank"
           rel="noreferrer"
           aria-label="GitHub"
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--r)] bg-[var(--surface-2)] text-[var(--text)] transition-colors hover:text-[var(--accent)]"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--r)] glass-inner text-[var(--text)] transition-colors hover:text-[var(--accent)]"
         >
           <GitHubIcon />
         </a>

@@ -44,7 +44,7 @@ export function PillButton({
     primary:
       "bg-[var(--accent)] text-[#0F3932] hover:brightness-110 hover:shadow-[0_0_24px_rgba(74,255,145,0.4)]",
     secondary:
-      "border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--surface-2)]",
+      "border border-[var(--text)] bg-transparent text-[var(--text)] hover:bg-[rgba(255,255,255,0.08)] hover:border-[var(--text)]",
     danger:
       "border border-[var(--danger)] text-[var(--danger)] bg-transparent hover:bg-[rgba(255,107,107,0.15)]",
   };
@@ -76,8 +76,8 @@ export function IconButton({
       <button
         {...rest}
         className={cn(
-          "h-10 w-10 rounded-full bg-[var(--surface-2)] flex items-center justify-center transition-all duration-200",
-          "hover:shadow-[0_0_20px_rgba(74,255,145,0.35)] hover:bg-[var(--surface-2)]",
+          "h-10 w-10 rounded-full glass-inner flex items-center justify-center transition-all duration-200",
+          "hover:shadow-[0_0_20px_rgba(74,255,145,0.15)] hover:bg-[rgba(255,255,255,0.07)] hover:border-[rgba(74,255,145,0.25)]",
           danger && "text-[var(--danger)] hover:shadow-[0_0_20px_rgba(255,107,107,0.4)]",
           active && "text-[var(--accent)]",
           !danger && !active && "text-[var(--text)]",
@@ -85,7 +85,7 @@ export function IconButton({
       >
         {children}
       </button>
-      <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+      <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md glass-nav px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
         {label}
       </div>
     </div>
@@ -112,7 +112,9 @@ export function Toggle({
       onClick={() => onChange(!checked)}
       className={cn(
         "relative h-6 w-11 rounded-full transition-all duration-200 disabled:opacity-50",
-        checked ? "bg-[var(--accent-solid)]" : "bg-[var(--surface-2)]",
+        checked
+          ? "bg-[var(--accent-solid)]"
+          : "bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.1)]",
       )}
     >
       <span
@@ -189,11 +191,6 @@ export function Slider({
       />
     </div>
   );
-}
-
-export function truncateAddr(a: string, head = 4, tail = 4) {
-  if (a.length <= head + tail + 3) return a;
-  return `${a.slice(0, head)}...${a.slice(-tail)}`;
 }
 
 export function Divider() {

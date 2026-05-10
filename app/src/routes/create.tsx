@@ -28,7 +28,7 @@ function CreatePage() {
   const { connected, createVault, busy } = useVaultStore();
   const { program, owner, connection } = useChain();
   const walletBalance = useSolBalance();
-  const [inactivityDays, setInactivityDays] = useState(12 * MONTH);
+  const [inactivityDays, setInactivityDays] = useState(24 * MONTH);
   const [graceDays, setGraceDays] = useState(14);
   const [deposit, setDeposit] = useState("");
   const [staking, setStaking] = useState(false);
@@ -225,14 +225,16 @@ function CreatePage() {
                 },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium text-[var(--text)]">{row.label}</span>
-                  <div className="group relative flex items-center gap-2">
-                    <Info className="h-4 w-4 text-[var(--text-muted)]" />
-                    <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
-                      {row.tooltip}
-                    </span>
-                    <Toggle checked={row.checked} onChange={row.onChange} />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-[var(--text)]">{row.label}</span>
+                    <div className="group relative flex items-center">
+                      <Info className="h-4 w-4 text-[var(--text-muted)]" />
+                      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-md glass-nav px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                        {row.tooltip}
+                      </span>
+                    </div>
                   </div>
+                  <Toggle checked={row.checked} onChange={row.onChange} />
                 </div>
               ))}
             </div>
@@ -325,12 +327,11 @@ function PeriodSlider({
               key={p.value}
               type="button"
               onClick={() => onChange(p.value)}
-              className="rounded-[var(--r)] px-2.5 py-0.5 text-[11px] font-medium transition-colors"
-              style={{
-                background: active ? "var(--accent-dim)" : "rgba(241,241,241,0.04)",
-                color: active ? "var(--accent)" : "var(--text-muted)",
-                border: "1px solid " + (active ? "var(--accent)" : "var(--border)"),
-              }}
+              className={`rounded-[var(--r)] px-2.5 py-0.5 text-[11px] font-medium transition-all duration-300 ${
+                active
+                  ? "glass-inner-accent text-[var(--accent)]"
+                  : "glass-inner text-[var(--text-muted)] hover:border-[rgba(74,255,145,0.25)] hover:text-[var(--text)]"
+              }`}
             >
               {p.label}
             </button>
@@ -346,15 +347,13 @@ export function PercentBadge({ sum }: { sum: number }) {
   const over = sum > 100;
   return (
     <span
-      className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-      style={{
-        background: ok
-          ? "var(--accent-dim)"
+      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold backdrop-blur-sm ${
+        ok
+          ? "glass-inner-accent text-[var(--accent)]"
           : over
-            ? "rgba(255,107,107,0.12)"
-            : "rgba(241,241,241,0.06)",
-        color: ok ? "var(--accent)" : over ? "var(--danger)" : "var(--text-muted)",
-      }}
+            ? "bg-[rgba(255,107,107,0.08)] border border-[rgba(255,107,107,0.2)] text-[var(--danger)]"
+            : "glass-inner text-[var(--text-muted)]"
+      }`}
     >
       {sum}%
     </span>

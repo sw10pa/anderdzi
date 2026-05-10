@@ -23,8 +23,8 @@ import {
   PillButton,
   TextInput,
   Toggle,
-  truncateAddr,
 } from "@/components/anderdzi/Primitives";
+import { truncateAddr } from "@/lib/utils";
 import { PercentBadge } from "@/routes/create";
 import type { Beneficiary } from "@/lib/mock";
 import {
@@ -116,7 +116,7 @@ function VaultStatusCard() {
           </span>
           <span className="text-sm text-[var(--text-muted)]">days</span>
         </div>
-        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(241,241,241,0.08)]">
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)] backdrop-blur-sm">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
@@ -147,7 +147,7 @@ function BalanceCard() {
   return (
     <GlassCard delay={80}>
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-[var(--r)] bg-[rgba(255,255,255,0.03)] border border-[var(--border)] p-4">
+        <div className="rounded-[var(--r)] glass-inner p-4">
           <div className="flex items-center gap-2 text-[var(--text-muted)]">
             <Wallet className="h-4 w-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Deposited</span>
@@ -157,11 +157,8 @@ function BalanceCard() {
             <span className="text-xs font-medium text-[var(--text-muted)]">SOL</span>
           </div>
         </div>
-        <div className="rounded-[var(--r)] bg-[rgba(74,255,145,0.04)] border border-[var(--accent-dim)] p-4">
-          <div
-            className="flex items-center gap-2"
-            style={{ color: vault.stakingEnabled ? "var(--accent)" : "var(--text-muted)" }}
-          >
+        <div className="rounded-[var(--r)] glass-inner-accent p-4">
+          <div className="flex items-center gap-2 text-[var(--text-muted)]">
             <TrendingUp className="h-4 w-4" />
             <span className="text-xs font-medium uppercase tracking-wider">Yield</span>
           </div>
@@ -247,7 +244,7 @@ function AmountDialog({
         }
       }}
     >
-      <DialogContent className="bg-[var(--surface)] border-[var(--border)] text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
+      <DialogContent className="glass-dialog text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
         <DialogHeader>
           <DialogTitle className="card-title">
             {isDeposit ? "Deposit SOL" : "Withdraw SOL"}
@@ -319,7 +316,7 @@ function CloseVaultFooter() {
         </button>
       </div>
       <Dialog open={confirm} onOpenChange={setConfirm}>
-        <DialogContent className="bg-[var(--surface)] border-[var(--border)] text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
+        <DialogContent className="glass-dialog text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
           <DialogHeader>
             <DialogTitle className="card-title">Close this vault?</DialogTitle>
             <DialogDescription className="text-[var(--text-muted)]">
@@ -386,7 +383,7 @@ function BeneficiariesCard() {
           {vault.beneficiaries.map((b, i) => (
             <div key={i} className="flex items-center gap-3">
               <div
-                className="flex h-9 w-9 items-center justify-center rounded-[var(--r)] bg-[var(--surface-2)] text-sm font-semibold"
+                className="flex h-9 w-9 items-center justify-center rounded-[var(--r)] glass-inner text-sm font-semibold"
                 style={{ color: "var(--accent)" }}
               >
                 {i + 1}
@@ -395,7 +392,7 @@ function BeneficiariesCard() {
                 {truncateAddr(b.address, 6, 6)}
               </span>
               <span
-                className="rounded-[var(--r)] bg-[var(--accent-dim)] px-2.5 py-0.5 text-xs font-semibold"
+                className="rounded-[var(--r)] glass-inner-accent px-2.5 py-0.5 text-xs font-semibold"
                 style={{ color: "var(--accent)" }}
               >
                 {b.percentage}%
@@ -496,59 +493,65 @@ function SettingsCard() {
     <GlassCard delay={320}>
       <div className="card-title mb-4 text-left">Optional Features</div>
 
-      {/* Watcher toggle */}
-      <div className="flex items-center justify-between py-2">
-        <span className="text-sm font-medium text-[var(--text)]">Activity Watcher</span>
-        <div className="group relative flex items-center gap-2">
-          <Info className="h-4 w-4 text-[var(--text-muted)]" />
-          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
-            Monitors on-chain activity automatically.
-          </span>
-          <Toggle
-            checked={vault.watcherEnabled}
-            onChange={(v) => handleToggle("watcherEnabled", v)}
-            disabled={busy === "watcherEnabled"}
-          />
-        </div>
-      </div>
-
       {/* Staking toggle */}
       <div className="flex items-center justify-between py-2">
-        <span className="text-sm font-medium text-[var(--text)]">Staking</span>
-        <div className="group relative flex items-center gap-2">
-          <Info className="h-4 w-4 text-[var(--text-muted)]" />
-          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
-            Earn yield via Marinade liquid staking. Mainnet only.
-          </span>
-          <Toggle
-            checked={vault.stakingEnabled}
-            onChange={(v) => handleToggle("stakingEnabled", v)}
-            disabled={busy === "stakingEnabled"}
-          />
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text)]">Staking</span>
+          <div className="group relative flex items-center">
+            <Info className="h-4 w-4 text-[var(--text-muted)]" />
+            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-md glass-nav px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+              Earn yield via Marinade liquid staking. Mainnet only.
+            </span>
+          </div>
         </div>
+        <Toggle
+          checked={vault.stakingEnabled}
+          onChange={(v) => handleToggle("stakingEnabled", v)}
+          disabled={busy === "stakingEnabled"}
+        />
+      </div>
+
+      {/* Watcher toggle */}
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text)]">Activity Watcher</span>
+          <div className="group relative flex items-center">
+            <Info className="h-4 w-4 text-[var(--text-muted)]" />
+            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-md glass-nav px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+              Monitors on-chain activity automatically.
+            </span>
+          </div>
+        </div>
+        <Toggle
+          checked={vault.watcherEnabled}
+          onChange={(v) => handleToggle("watcherEnabled", v)}
+          disabled={busy === "watcherEnabled"}
+        />
       </div>
 
       {/* Telegram toggle */}
       <div className="flex items-center justify-between py-2">
-        <span className="text-sm font-medium text-[var(--text)]">Telegram Notifications</span>
-        <div className="group relative flex items-center gap-2">
-          <Info className="h-4 w-4 text-[var(--text-muted)]" />
-          <span className="pointer-events-none absolute right-14 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
-            Get notified before trigger and on key events.
-          </span>
-          <Toggle
-            checked={vault.telegramEnabled}
-            onChange={handleTelegramToggle}
-            disabled={busy === "telegram"}
-          />
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text)]">Telegram Notifications</span>
+          <div className="group relative flex items-center">
+            <Info className="h-4 w-4 text-[var(--text-muted)]" />
+            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-md glass-nav px-2 py-1 text-xs text-[var(--text)] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+              Get notified before trigger and on key events.
+            </span>
+          </div>
         </div>
+        <Toggle
+          checked={vault.telegramEnabled}
+          onChange={handleTelegramToggle}
+          disabled={busy === "telegram"}
+        />
       </div>
 
       {vault.telegramEnabled && (
         <div className="anim-fade-up mt-3 flex justify-end">
           <button
             onClick={() => setTgOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-[var(--r)] bg-[var(--accent-dim)] px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-[var(--r)] glass-inner-accent px-3 py-1.5 text-xs font-medium transition-all duration-300 hover:border-[rgba(74,255,145,0.35)]"
             style={{ color: "var(--accent)" }}
           >
             <Pencil className="h-3 w-3" />
@@ -558,7 +561,7 @@ function SettingsCard() {
       )}
 
       <Dialog open={tgOpen} onOpenChange={setTgOpen}>
-        <DialogContent className="bg-[var(--surface)] border-[var(--border)] text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
+        <DialogContent className="glass-dialog text-[var(--text)] sm:max-w-sm rounded-[var(--r)]">
           <DialogHeader>
             <DialogTitle className="card-title">Telegram chat ID</DialogTitle>
             <DialogDescription className="text-[var(--text-muted)]">

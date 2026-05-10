@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, Link, createRootRouteWithContext, useLocation } from "@tanstack/react-router";
 import { Toaster } from "sonner";
@@ -5,6 +6,8 @@ import { Navbar } from "@/components/anderdzi/Navbar";
 import { Footer } from "@/components/anderdzi/Footer";
 import { WalletProvider } from "@/providers/WalletProvider";
 import { useWalletSync } from "@/hooks/useWalletSync";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useVaultStore } from "@/store/useVaultStore";
 
 function NotFoundComponent() {
   return (
@@ -33,6 +36,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFoundComponent,
 });
 
+function WalletGate({ children }: { children: ReactNode }) {
+  const { connected, connecting } = useWallet();
+  const { vaultLoading } = useVaultStore();
+
+  // Show nothing until wallet state is resolved (unless disconnected)
+  if (connecting || (connected && vaultLoading)) {
+    return <div className="flex min-h-screen" />;
+  }
+
+  return <div className="flex min-h-screen flex-col">{children}</div>;
+}
+
 function WalletSync() {
   useWalletSync();
   return null;
@@ -47,9 +62,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <WalletProvider>
         <WalletSync />
-        <div className="flex min-h-screen flex-col">
+        <WalletGate>
           <Navbar />
-          <main className={`mx-auto w-full ${isLanding ? "" : "max-w-[900px]"} flex-1 px-4`}>
+          <main className={`mx-auto w-full ${isLanding ? "" : "max-w-[900px] pt-24"} flex-1 px-4`}>
             <Outlet />
           </main>
           {!isLanding && <Footer />}
@@ -68,7 +83,7 @@ function RootComponent() {
               },
             }}
           />
-        </div>
+        </WalletGate>
       </WalletProvider>
     </QueryClientProvider>
   );

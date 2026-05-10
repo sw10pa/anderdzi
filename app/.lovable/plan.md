@@ -30,6 +30,7 @@ src/routes/
 ```
 
 Routing logic on `/`:
+
 - No wallet → Landing
 - Wallet + no vault → redirect to `/create`
 - Wallet + vault → redirect to `/dashboard`
@@ -51,6 +52,7 @@ Stacked glass cards (16px gap):
 ## Page 3 — Create Vault
 
 Single glass card form: header "Create Your Vault" + subtitle, then:
+
 1. Inactivity Period — custom slider 6–60 months, value badge.
 2. Grace Period — custom slider 7–180 days, value badge.
 3. Initial Deposit — SOL-suffixed input, optional.
@@ -63,6 +65,7 @@ On submit: 1200ms fake confirm → success toast → navigate to `/dashboard` wi
 ## Mock data layer
 
 `src/lib/mock.ts`:
+
 - `MOCK_ENABLED = true`
 - `mockVaultActive`, `mockVaultTriggered`, `mockVaultNoStaking` (all states)
 - `mockWalletAddress = "7xKp...3mNq"`, `mockSolBalance = 4.2819`, `mockYield = 0.0312`

@@ -29,3 +29,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Windows download metadata (NTFS alternate data streams)
+*:Zone.Identifier
+*:sec.endpointdlp
