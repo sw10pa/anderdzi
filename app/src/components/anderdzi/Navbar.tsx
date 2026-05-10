@@ -14,7 +14,7 @@ export function Navbar() {
   return (
     <header className="fixed top-4 left-0 right-0 z-50 mx-auto max-w-[900px] px-4">
       <div
-        className="glass-nav flex items-center justify-between px-5 py-5"
+        className="flex items-center justify-between px-5 py-5 backdrop-blur-[60px] bg-[linear-gradient(135deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0.12)_100%)] rounded-[var(--r)]"
         style={{ borderRadius: "var(--r)" }}
       >
         {/* Left: wallet address */}
