@@ -80,9 +80,8 @@ function Index() {
 
       {/* Sticky oval header — hidden until scroll */}
       <header
-        className="fixed top-4 left-0 right-0 z-50 mx-auto max-w-[900px] px-4 transition-all duration-500"
+        className="fixed top-4 left-0 right-0 z-50 mx-auto max-w-[900px] px-4 transition-transform duration-300"
         style={{
-          opacity: navVisible ? 1 : 0,
           transform: navVisible ? "translateY(0)" : "translateY(-120%)",
           pointerEvents: navVisible ? "auto" : "none",
         }}
