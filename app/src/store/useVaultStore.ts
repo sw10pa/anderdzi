@@ -5,7 +5,7 @@ import { Program } from "@coral-xyz/anchor";
 import type { Anderdzi } from "@/idl/anderdzi";
 import { fetchVault } from "@/lib/accounts";
 import * as ix from "@/lib/instructions";
-import { BOT_API_URL } from "@/lib/constants";
+import { BOT_API_URL, STAKING_ENABLED } from "@/lib/constants";
 import type { Beneficiary, Vault } from "@/lib/mock";
 import bs58 from "bs58";
 
@@ -239,7 +239,7 @@ export const useVaultStore = create<State & Actions>((set, get) => ({
         inactivityDays: data.inactivityDays,
         graceDays: data.graceDays,
         depositSol: data.deposit,
-        stakingEnabled: data.staking,
+        stakingEnabled: STAKING_ENABLED && data.staking,
         enableWatcher: data.watcher,
         beneficiaries: data.beneficiaries,
       }),
